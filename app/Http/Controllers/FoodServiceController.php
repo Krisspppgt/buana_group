@@ -1,0 +1,147 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Enums\OrderStatus;
+use App\Enums\Unit;
+use App\Models\Order;
+use App\Models\Product;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+
+class FoodServiceController extends Controller
+{
+    /**
+     * Menampilkan katalog Buana Food Services, budget calculator, dan form rundown.
+     */
+    public function index(Request $request): View
+    {
+        $user = $request->user();
+        $products = Product::where('unit', Unit::Food)
+            ->where('is_active', true)
+            ->get();
+
+        $savedAddress = $user->addresses()->where('is_main', true)->first()
+            ?? $user->addresses()->latest('id')->first();
+
+        return view('food.index', compact('products', 'user', 'savedAddress'));
+    }
+
+    /**
+     * Menyimpan pesanan katering / snack box dengan jadwal rundown acara.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'products' => ['required', 'array'],
+            'products.*' => ['nullable', 'integer', 'min:0'],
+            'event_name' => ['required', 'string', 'max:50'],
+            'send_at' => ['required', 'date'],
+            'diet_pref' => ['required', 'string', 'max:30'],
+            'rundown_panitia' => ['nullable', 'string', 'max:20'],
+            'rundown_peserta' => ['nullable', 'string', 'max:20'],
+            'rundown_vip' => ['nullable', 'string', 'max:20'],
+            'ship_name' => ['required', 'string', 'max:40'],
+            'ship_phone' => ['required', 'regex:/^08\d{8,12}$/'],
+            'ship_addr' => ['required', 'string', 'max:150'],
+            'note' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $selectedItems = array_filter($data['products'], fn ($qty) => (int) $qty > 0);
+
+        if (empty($selectedItems)) {
+            return back()->withErrors(['products' => 'Pilih minimal satu paket menu dengan jumlah lebih dari 0.'])->withInput();
+        }
+
+        $order = DB::transaction(function () use ($user, $data, $selectedItems) {
+            $productModels = Product::whereIn('id', array_keys($selectedItems))->get()->keyBy('id');
+
+            $subtotal = 0;
+            $itemsData = [];
+
+            foreach ($selectedItems as $productId => $qty) {
+                $product = $productModels->get($productId);
+                if (! $product) {
+                    continue;
+                }
+
+                $qty = (int) $qty;
+                $unitPrice = $product->priceFor($user, $qty);
+                $subtotal += ($unitPrice * $qty);
+
+                $itemsData[] = [
+                    'product_id' => $product->id,
+                    'qty' => $qty,
+                    'price' => $unitPrice,
+                ];
+            }
+
+            // Gabungkan catatan rundown acara dan preferensi diet
+            $rundownNote = "[Acara: {$data['event_name']} | Diet: {$data['diet_pref']}]";
+            if (! empty($data['rundown_panitia']) || ! empty($data['rundown_peserta']) || ! empty($data['rundown_vip'])) {
+                $rundownNote .= " [Rundown: Pnt={$data['rundown_panitia']}, Psr={$data['rundown_peserta']}, VIP={$data['rundown_vip']}]";
+            }
+            if (! empty($data['note'])) {
+                $rundownNote .= " {$data['note']}";
+            }
+
+            $order = Order::create([
+                'code' => Order::newCode(),
+                'user_id' => $user->id,
+                'unit' => Unit::Food,
+                'status' => OrderStatus::Processing,
+                'subtotal' => $subtotal,
+                'ship_fee' => 0,
+                'total' => $subtotal,
+                'ship_name' => $data['ship_name'],
+                'ship_phone' => $data['ship_phone'],
+                'ship_addr' => $data['ship_addr'],
+                'note' => substr($rundownNote, 0, 100),
+                'send_at' => $data['send_at'],
+            ]);
+
+            foreach ($itemsData as $item) {
+                $order->items()->create($item);
+            }
+
+            return $order;
+        });
+
+        return redirect()->route('food.show', $order->code)
+            ->with('success', 'Pesanan katering berhasil dijadwalkan! Tim dapur siap memproses sesuai rundown.');
+    }
+
+    /**
+     * Menampilkan detail pesanan makanan & status pengiriman rundown.
+     */
+    public function show(Request $request, string $code): View
+    {
+        $user = $request->user();
+
+        $order = Order::with(['items.product', 'user'])
+            ->where('code', $code)
+            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        return view('food.show', compact('order'));
+    }
+
+    /**
+     * Riwayat pesanan Buana Food Services.
+     */
+    public function history(Request $request): View
+    {
+        $user = $request->user();
+        $orders = Order::with('items.product')
+            ->where('user_id', $user->id)
+            ->where('unit', Unit::Food)
+            ->latest()
+            ->paginate(10);
+
+        return view('food.history', compact('orders'));
+    }
+}
