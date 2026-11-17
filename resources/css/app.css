@@ -2,8 +2,31 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-buana-primary: #0D5A47;
+    --color-buana-dark: #084032;
+    --color-buana-light: #e6f4ea;
+    --color-buana-surface: #f8faf9;
+    --color-buana-border: #e5e9e7;
+    --color-buana-text: #1a2e26;
+    --color-buana-muted: #64748b;
+}
+
+/* Custom device mockup styling for presentation & mobile fidelity */
+.phone-mockup-frame {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 10px #1f2937, 0 0 0 12px #374151;
+    border-radius: 40px;
+    overflow: hidden;
+}
+
+@media (max-width: 640px) {
+    .phone-mockup-frame {
+        box-shadow: none;
+        border-radius: 0;
+    }
 }

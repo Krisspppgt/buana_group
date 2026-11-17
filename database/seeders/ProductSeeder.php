@@ -69,6 +69,19 @@ class ProductSeeder extends Seeder
             // 2. Buana Food Services
             [
                 'unit' => Unit::Food,
+                'name' => 'Paket Rapat Fakultas',
+                'info' => 'Snack box + air mineral higienis Unwahas khusus kebutuhan rapat dekanat, dosen, dan seminar kampus.',
+                'price' => 15000,
+                'price_civitas' => 15000,
+                'price_bulk' => 15000,
+                'bulk_min' => 10,
+                'stock' => 1500,
+                'uom' => 'paket',
+                'photo' => '/images/paket_rapat_fakultas.jpg',
+                'is_active' => true,
+            ],
+            [
+                'unit' => Unit::Food,
                 'name' => 'Paket Snack Box Regular',
                 'info' => 'Isi 3 macam snack (lemper, pastel, bolu kukus) + Air Mineral Unwahas Cup. Cocok untuk seminar & rapat.',
                 'price' => 12000,

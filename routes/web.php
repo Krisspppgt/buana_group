@@ -6,6 +6,7 @@ use App\Http\Controllers\KonveksiController;
 use App\Http\Controllers\TicketingController;
 use App\Http\Controllers\TourTravelController;
 use App\Http\Controllers\WaterOrderController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -16,9 +17,52 @@ Route::middleware('guest')->group(function () {
     Route::post('/daftar', [AuthController::class, 'register'])->middleware('throttle:6,1');
 });
 
+// Demo / Preview Mockup Slide 8 (Dapat diakses langsung)
+Route::get('/mockup-slide', fn () => view('mockup-showcase'))->name('mockup.showcase');
+
 Route::middleware('auth')->group(function () {
     Route::get('/', fn () => view('home'))->name('home');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Alur Pemesanan Kampus Buana Group (Sesuai Mockup Slide 8)
+    Route::get('/pesanan/rincian', fn () => view('order.rincian'))->name('order.campus.rincian');
+    Route::post('/pesanan/ajukan', function (Request $request) {
+        $qty = (int) $request->input('qty', 40);
+        $price = 15000;
+        session()->put('campus_order', [
+            'code' => 'BG-261114-001',
+            'package_name' => 'Paket Rapat Fakultas',
+            'package_subtitle' => 'Snack box + air mineral',
+            'qty' => $qty,
+            'price' => $price,
+            'total' => $qty * $price,
+            'schedule' => $request->input('schedule', '16 Nov 2026 · 09.00 WIB'),
+            'location' => $request->input('location', 'Fakultas Farmasi UNWAHAS'),
+            'status_label' => 'Menunggu persetujuan',
+            'created_at' => '14 Nov 2026 · 10.24 WIB',
+        ]);
+
+        return redirect()->route('order.campus.detail');
+    })->name('order.campus.store');
+    Route::get('/pesanan/detail', function () {
+        $order = session('campus_order', [
+            'code' => 'BG-261114-001',
+            'package_name' => 'Paket Rapat Fakultas',
+            'package_subtitle' => 'Snack box + air mineral',
+            'qty' => 40,
+            'price' => 15000,
+            'total' => 600000,
+            'schedule' => '16 Nov 2026 · 09.00 WIB',
+            'location' => 'Fakultas Farmasi UNWAHAS',
+            'status_label' => 'Menunggu persetujuan',
+            'created_at' => '14 Nov 2026 · 10.24 WIB',
+        ]);
+
+        return view('order.detail', compact('order'));
+    })->name('order.campus.detail');
+
+    // Tampilan Presentasi 3 Layar Berjajar (Slide 8 Presentation Mode)
+    Route::get('/mockup-slide', fn () => view('mockup-showcase'))->name('mockup.showcase');
 
     // Modul Unit 1: Air Mineral Unwahas
     Route::prefix('air-mineral')->name('water.')->group(function () {
