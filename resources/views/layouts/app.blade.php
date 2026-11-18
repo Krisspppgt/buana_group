@@ -147,9 +147,18 @@
                         </span>
                         <div class="text-left">
                             <span class="font-bold text-white block leading-tight">{{ $user->name }}</span>
-                            <span class="text-[10px] text-emerald-300 font-semibold block leading-tight">Civitas UNWAHAS</span>
+                            <span class="text-[10px] text-emerald-300 font-semibold block leading-tight">{{ $user->role?->label() ?? 'Pengguna' }}</span>
                         </div>
                     </div>
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 hover:bg-red-500/90 border border-white/20 text-white text-xs font-semibold transition cursor-pointer" title="Keluar dari akun">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span>Keluar</span>
+                        </button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}" class="px-4 py-2 bg-white text-[#0D5A47] font-bold text-xs rounded-xl hover:bg-emerald-50 transition shadow-xs">
                         Masuk Akun
@@ -252,13 +261,37 @@
             </a>
 
             {{-- 3. Akun --}}
-            <div class="flex flex-col items-center gap-1 text-gray-400 font-medium cursor-pointer">
+            <button type="button" onclick="document.getElementById('mobile-account-menu').classList.toggle('hidden')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#0D5A47] font-medium cursor-pointer focus:outline-none">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <span>Akun</span>
-            </div>
+            </button>
         </div>
+
+        {{-- Mobile Account Popover (Logout) --}}
+        @auth
+        <div id="mobile-account-menu" class="hidden absolute bottom-full right-3 mb-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-200 p-3.5 text-left z-50">
+            <div class="flex items-center gap-2.5 pb-2.5 border-b border-gray-100">
+                <span class="w-8 h-8 rounded-full bg-[#0D5A47] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                </span>
+                <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-900 truncate">{{ $user->name }}</p>
+                    <p class="text-[11px] text-gray-500 truncate">{{ $user->role?->label() ?? 'Pengguna' }}</p>
+                </div>
+            </div>
+            <form method="POST" action="{{ route('logout') }}" class="mt-2.5">
+                @csrf
+                <button type="submit" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Keluar (Logout)</span>
+                </button>
+            </form>
+        </div>
+        @endauth
 
         {{-- Mobile Indicator Home Bar --}}
         <div class="w-full flex justify-center pt-1 pb-0.5">
