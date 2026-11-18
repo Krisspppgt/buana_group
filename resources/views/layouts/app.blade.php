@@ -141,13 +141,23 @@
             {{-- Right: User Info / Action --}}
             <div class="flex items-center gap-3">
                 @auth
+                    @if ($user->isAdmin())
+                        <a href="/admin" class="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-extrabold text-xs rounded-full transition shadow-xs flex items-center gap-1.5">
+                            <span>📊</span>
+                            <span>Dashboard Admin</span>
+                        </a>
+                    @endif
                     <div class="flex items-center gap-2.5 bg-emerald-950/60 border border-emerald-700/60 rounded-full px-3 py-1.5 text-xs text-white">
                         <span class="w-6 h-6 rounded-full bg-white text-[#0D5A47] flex items-center justify-center font-bold text-[10px]">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </span>
                         <div class="text-left">
                             <span class="font-bold text-white block leading-tight">{{ $user->name }}</span>
+<<<<<<< Updated upstream
                             <span class="text-[10px] text-emerald-300 font-semibold block leading-tight">{{ $user->role?->label() ?? 'Pengguna' }}</span>
+=======
+                            <span class="text-[10px] text-emerald-300 font-semibold block leading-tight">{{ $user->role_badge }}</span>
+>>>>>>> Stashed changes
                         </div>
                     </div>
                     <form method="POST" action="{{ route('logout') }}" class="inline">
