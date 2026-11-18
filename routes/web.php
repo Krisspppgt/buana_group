@@ -14,7 +14,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
     Route::get('/daftar', [AuthController::class, 'showRegister'])->name('register');
+    Route::get('/register', [AuthController::class, 'showRegister']);
     Route::post('/daftar', [AuthController::class, 'register'])->middleware('throttle:6,1');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
 });
 
 // Demo / Preview Mockup Slide 8 (Dapat diakses langsung)
