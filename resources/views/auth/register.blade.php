@@ -437,29 +437,6 @@
                                     <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
                                 </button>
 
-                                <!-- Divider ATAU DAFTAR INSTAN -->
-                                <div class="relative flex items-center my-2">
-                                    <div class="flex-grow border-t border-surface-container-high"></div>
-                                    <span class="flex-shrink mx-3 text-[11px] text-outline font-bold uppercase tracking-wider">ATAU DAFTAR INSTAN</span>
-                                    <div class="flex-grow border-t border-surface-container-high"></div>
-                                </div>
-
-                                <!-- SSO Buttons -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    <button onclick="alert('Pendaftaran SSO Yayasan UNWAHAS sedang tahap sinkronisasi server kampus.')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-surface-container-high text-on-surface shadow-xs transition-all cursor-pointer" type="button">
-                                        <span class="material-symbols-outlined text-primary text-[18px]">account_balance</span>
-                                        <span class="text-xs font-bold truncate">SSO Yayasan UNWAHAS</span>
-                                    </button>
-                                    <button onclick="alert('Pendaftaran Google Institusi sedang tahap sinkronisasi server kampus.')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-surface-container-high text-on-surface shadow-xs transition-all cursor-pointer" type="button">
-                                        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
-                                            <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z" fill="#4285F4"></path>
-                                            <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
-                                            <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
-                                            <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
-                                        </svg>
-                                        <span class="text-xs font-bold">Google Institusi</span>
-                                    </button>
-                                </div>
                             </form>
 
                             <!-- Helpdesk Banner (Persis Screenshot) -->
@@ -655,7 +632,7 @@
                             <span class="material-symbols-outlined text-on-surface-variant absolute left-3 pointer-events-none text-lg">fingerprint</span>
                             <input class="w-full pl-10 pr-3 py-2.5 bg-surface-container-low rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant/60 focus:bg-surface-container-lowest focus:outline-none transition-colors border-0" id="academic-id" name="campus_id" value="{{ old('campus_id') }}" placeholder="Masukkan NIM atau NIP resmi Anda" type="text"/>
                         </div>
-                        <p class="font-label-sm text-[11px] text-on-surface-variant">Wajib diisi civitas akademika untuk mengaktifkan fitur SSO &amp; hak istimewa harga khusus.</p>
+                        <p class="font-label-sm text-[11px] text-on-surface-variant">Wajib diisi civitas akademika untuk mengaktifkan verifikasi akun &amp; hak istimewa harga khusus.</p>
                     </div>
 
                     <!-- Password Card (Persis Screenshot) -->
