@@ -193,9 +193,6 @@
                             Daftar
                         </button>
                     </div>
-                    <span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-surface-container-high text-primary font-semibold">
-                        Langkah 1/2
-                    </span>
                 </div>
 
                 <!-- Heading -->
@@ -510,13 +507,17 @@
                                 <input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-xl pl-3.5 pr-8 py-2.5 shadow-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary border-0" 
                                     id="desktop-pwd" 
                                     name="password" 
-                                    placeholder="Minimal 8 karakter" 
+                                    placeholder="Min. 8 karakter, awal kapital &amp; angka" 
                                     type="password" 
+                                    minlength="8"
+                                    pattern="^[A-Z](?=.*\d).{7,}$"
+                                    title="Minimal 8 karakter, huruf pertama harus kapital, dan harus mengandung angka"
                                     required/>
                                 <button class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-on-surface-variant hover:text-on-surface cursor-pointer" type="button" onclick="togglePassVisibility('desktop-pwd', this)">
                                     <span class="material-symbols-outlined text-base">visibility</span>
                                 </button>
                             </div>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Min. 8 karakter, diawali huruf kapital &amp; ada angka.</p>
                         </div>
                         <div>
                             <label class="block font-label-md text-label-md text-on-surface mb-1.5">
@@ -892,13 +893,17 @@
                                 <input class="w-full h-12 px-4 pr-11 rounded-xl bg-surface-container-lowest text-on-surface font-body-md text-body-md shadow-sm outline-none placeholder:text-outline-variant focus:bg-surface-container-low transition-colors border-0" 
                                     id="mobile-pass-field" 
                                     name="password" 
-                                    placeholder="Minimal 8 karakter" 
+                                    placeholder="Min. 8 karakter, awal kapital &amp; ada angka" 
+                                    minlength="8"
+                                    pattern="^[A-Z](?=.*\d).{7,}$"
+                                    title="Minimal 8 karakter, huruf pertama harus kapital, dan harus mengandung angka"
                                     required="" 
                                     type="password"/>
                                 <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface p-1 flex items-center justify-center cursor-pointer" onclick="togglePassVisibility('mobile-pass-field', this)" type="button">
                                     <span class="material-symbols-outlined text-[20px]">visibility</span>
                                 </button>
                             </div>
+                            <p class="font-label-sm text-label-sm text-on-surface-variant px-1">Min. 8 karakter, huruf pertama kapital &amp; wajib mengandung angka.</p>
                         </div>
 
                         <!-- Konfirmasi Kata Sandi -->
