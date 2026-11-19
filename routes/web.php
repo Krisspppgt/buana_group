@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FoodServiceController;
 use App\Http\Controllers\KonveksiController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\TicketingController;
 use App\Http\Controllers\TourTravelController;
 use App\Http\Controllers\WaterOrderController;
@@ -17,6 +18,13 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister']);
     Route::post('/daftar', [AuthController::class, 'register'])->middleware('throttle:6,1');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
+
+    // Lupa Kata Sandi + OTP (WhatsApp & Gmail)
+    Route::get('/lupa-sandi', [PasswordResetController::class, 'showRequestForm'])->name('password.request');
+    Route::post('/lupa-sandi', [PasswordResetController::class, 'sendOtp'])->name('password.otp.send')->middleware('throttle:6,1');
+    Route::get('/lupa-sandi/verifikasi', [PasswordResetController::class, 'showVerifyForm'])->name('password.verify');
+    Route::post('/lupa-sandi/kirim-ulang', [PasswordResetController::class, 'resendOtp'])->name('password.otp.resend')->middleware('throttle:6,1');
+    Route::post('/lupa-sandi/reset', [PasswordResetController::class, 'resetPassword'])->name('password.reset')->middleware('throttle:6,1');
 });
 
 // Demo / Preview Mockup Slide 8 (Dapat diakses langsung)

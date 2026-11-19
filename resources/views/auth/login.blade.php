@@ -259,8 +259,11 @@
                                     <input class="w-full h-[48px] pl-4 pr-12 rounded-xl font-body-md text-body-md bg-surface-container-lowest text-on-surface shadow-sm focus:outline-none transition-all placeholder:text-outline/60 ring-1 @error('password') ring-2 ring-error bg-error-container/10 @else ring-surface-variant focus:ring-2 focus:ring-secondary @endif" 
                                         id="input-password" 
                                         name="password" 
-                                        placeholder="Masukkan kata sandi Anda" 
+                                        placeholder="Min. 8 karakter, awal kapital &amp; ada angka" 
                                         type="password" 
+                                        minlength="8"
+                                        pattern="^[A-Z](?=.*\d).{7,}$"
+                                        title="Minimal 8 karakter, huruf pertama harus kapital, dan harus mengandung angka"
                                         required/>
                                     <button aria-label="Tampilkan atau sembunyikan kata sandi" class="absolute right-3.5 p-1 text-outline hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" id="toggle-password" onclick="togglePasswordVisibility('input-password', 'eye-icon')" type="button">
                                         <span class="material-symbols-outlined text-[20px]" id="eye-icon">visibility</span>
@@ -277,7 +280,7 @@
                                         <div></div>
                                     @enderror
                                     <!-- Forgot Password Link -->
-                                    <a class="font-label-md text-label-md text-secondary hover:underline ml-auto" href="javascript:void(0)" onclick="showForgotNotice()">
+                                    <a class="font-label-md text-label-md text-secondary hover:underline ml-auto" href="{{ route('password.request') }}">
                                         Lupa kata sandi?
                                     </a>
                                 </div>
@@ -422,9 +425,12 @@
                             <input class="w-full py-3.5 pl-4 pr-12 rounded-xl text-body-lg font-body-lg bg-surface-container-lowest text-on-surface placeholder:text-outline-variant shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest" 
                                 id="passwordInput" 
                                 name="password" 
-                                placeholder="Masukkan kata sandi" 
+                                placeholder="Min. 8 karakter, awal kapital &amp; ada angka" 
                                 style="box-shadow: 0 0 0 1px @error('password') #ba1a1a @else #D9E2DC @endif;" 
                                 type="password" 
+                                minlength="8"
+                                pattern="^[A-Z](?=.*\d).{7,}$"
+                                title="Minimal 8 karakter, huruf pertama harus kapital, dan harus mengandung angka"
                                 required/>
                             <button aria-label="Tampilkan / Sembunyikan Kata Sandi" class="absolute right-3.5 p-1 text-outline hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" onclick="togglePasswordVisibility('passwordInput', 'pwdEyeIcon')" type="button">
                                 <span class="material-symbols-outlined text-[20px]" id="pwdEyeIcon">visibility</span>
@@ -439,7 +445,7 @@
                         @enderror
                         <!-- Lupa Kata Sandi Text Link -->
                         <div class="flex justify-end mt-1">
-                            <a class="font-label-md text-label-md text-primary hover:underline" href="javascript:void(0)" onclick="showForgotNotice()">
+                            <a class="font-label-md text-label-md text-primary hover:underline" href="{{ route('password.request') }}">
                                 Lupa kata sandi?
                             </a>
                         </div>
