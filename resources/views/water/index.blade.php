@@ -2,7 +2,7 @@
 @section('title', 'Pemesanan Air Mineral Unwahas - Buana Group')
 
 @section('content')
-<div class="bg-gradient-to-r from-teal-900 via-emerald-800 to-cyan-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+<div class="bg-gradient-to-r from-teal-900 via-emerald-800 to-cyan-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
     <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -11,20 +11,19 @@
                 <span>&bull;</span>
                 <span class="uppercase tracking-wider">Unit 1 &bull; Logistik Air Minum</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">💧 Air Mineral Unwahas</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Air Mineral Unwahas</h1>
             <p class="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
                 Pesan galon 19L, botol, dan gelas higienis untuk kebutuhan kantor, fakultas, acara seminar, maupun langganan rutin rumah tangga.
             </p>
         </div>
         <a href="{{ route('water.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            📋 Riwayat & Lacak Armada
+            Riwayat Pesanan
         </a>
     </div>
 </div>
 
 @if ($user->isCivitas())
     <div class="eco-banner" style="margin-bottom: 16px;">
-        <span style="font-size: 1.25rem;">🎓</span>
         <div>
             <b>Tarif Khusus Civitas Unwahas Aktif</b>
             <div style="font-size: 0.8rem; opacity: 0.9;">Kamu mendapatkan potongan harga civitas untuk setiap produk di bawah ini.</div>
@@ -53,27 +52,24 @@
             <label style="margin:0; cursor:pointer;">
                 <input type="radio" name="order_type" value="regular" checked onchange="updateOrderMode()" style="display:none;" id="type_regular">
                 <div class="type-btn active" id="btn_regular">
-                    <div style="font-size:1.2rem;">📦</div>
-                    <div style="font-weight:700; font-size:0.82rem; margin-top:4px;">Insidental</div>
-                    <div style="font-size:0.7rem; color:var(--muted);">Pesan Langsung</div>
+                    <div style="font-weight:700; font-size:0.84rem;">Insidental</div>
+                    <div style="font-size:0.7rem; color:var(--muted); margin-top:2px;">Pesan Langsung</div>
                 </div>
             </label>
 
             <label style="margin:0; cursor:pointer;">
                 <input type="radio" name="order_type" value="subscription" onchange="updateOrderMode()" style="display:none;" id="type_sub">
                 <div class="type-btn" id="btn_sub">
-                    <div style="font-size:1.2rem;">🔄</div>
-                    <div style="font-weight:700; font-size:0.82rem; margin-top:4px;">Langganan</div>
-                    <div style="font-size:0.7rem; color:var(--muted);">Harian / Mingguan</div>
+                    <div style="font-weight:700; font-size:0.84rem;">Langganan</div>
+                    <div style="font-size:0.7rem; color:var(--muted); margin-top:2px;">Harian / Mingguan</div>
                 </div>
             </label>
 
             <label style="margin:0; cursor:pointer;">
                 <input type="radio" name="order_type" value="bulk" onchange="updateOrderMode()" style="display:none;" id="type_bulk">
                 <div class="type-btn" id="btn_bulk">
-                    <div style="font-size:1.2rem;">🏢</div>
-                    <div style="font-weight:700; font-size:0.82rem; margin-top:4px;">B2B Bulk</div>
-                    <div style="font-size:0.7rem; color:var(--muted);">Acara Kampus</div>
+                    <div style="font-weight:700; font-size:0.84rem;">B2B Bulk</div>
+                    <div style="font-size:0.7rem; color:var(--muted); margin-top:2px;">Acara Kampus</div>
                 </div>
             </label>
         </div>
@@ -81,7 +77,7 @@
         {{-- Opsi Khusus Langganan --}}
         <div id="subscription_options" style="display:none; margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px;">
             <div style="font-size:0.85rem; font-weight:700; color:#166534; margin-bottom:6px;">
-                📅 Pilih Frekuensi Pengiriman Rutin:
+                Pilih Frekuensi Pengiriman Rutin:
             </div>
             <select name="subscription_cycle" style="width:100%; padding:10px; border:1px solid #86efac; border-radius:8px; font-size:0.9rem; background:#fff;">
                 <option value="Setiap Hari (Senin - Sabtu)">Setiap Hari (Senin - Sabtu) - Kantor / Fakultas</option>
@@ -97,7 +93,7 @@
         {{-- Opsi Khusus B2B Bulk Order --}}
         <div id="bulk_options" style="display:none; margin-top:14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px;">
             <div style="font-size:0.85rem; font-weight:700; color:#1e40af; margin-bottom:6px;">
-                🎓 Kebutuhan Acara Kampus / Instansi:
+                Kebutuhan Acara Kampus / Instansi:
             </div>
             <div style="display:grid; grid-template-columns: 1fr; gap:8px;">
                 <div>
@@ -106,7 +102,7 @@
                 </div>
             </div>
             <div style="font-size:0.75rem; color:#1d4ed8; margin-top:6px;">
-                ⚡ <b>Harga Grosir Otomatis:</b> Berlaku diskon harga bulk khusus pemesanan jumlah banyak.
+                <b>Harga Grosir Otomatis:</b> Berlaku diskon harga bulk khusus pemesanan jumlah banyak.
             </div>
         </div>
     </div>
@@ -154,8 +150,8 @@
 
                 {{-- Bulk info bar --}}
                 @if ($p->price_bulk && $p->bulk_min)
-                    <div style="font-size: 0.73rem; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 4px 8px; border-radius: 6px; color: #475569;">
-                        🏷️ Pesan &ge; {{ $p->bulk_min }} {{ $p->uom }}: <b>Rp {{ number_format($p->price_bulk, 0, ',', '.') }}</b>/{{ $p->uom }} (Hemat Grosir)
+                    <div style="font-size: 0.73rem; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 5px 8px; border-radius: 6px; color: #475569;">
+                        Grosir &ge; {{ $p->bulk_min }} {{ $p->uom }}: <b>Rp {{ number_format($p->price_bulk, 0, ',', '.') }}</b>/{{ $p->uom }}
                     </div>
                 @endif
 
@@ -223,8 +219,8 @@
             <span id="summary_total" style="font-weight: 800; font-size: 1.25rem; color: #0f766e;">Rp 0</span>
         </div>
 
-        <button type="submit" id="btn_submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 1rem;">
-            🚀 Konfirmasi & Pesan Sekarang
+        <button type="submit" id="btn_submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 0.95rem;">
+            Konfirmasi & Pesan Sekarang
         </button>
     </div>
     </div>

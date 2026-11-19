@@ -63,23 +63,23 @@
     </div>
 
     {{-- Mobile Hero Welcome Card --}}
-    <div class="mt-4 bg-gradient-to-br from-[#144b3c] to-[#0D5A47] rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
+    <div class="mt-4 bg-[#0D5A47] rounded-2xl p-4 text-white shadow-sm relative overflow-hidden">
         <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
         <div class="relative z-10 flex items-center justify-between gap-3">
             <div>
-                <span id="mobileHeroBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 text-[10px] font-bold border border-emerald-400/30">
-                    🎓 Tarif Khusus Civitas Aktif
+                <span id="mobileHeroBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/15 text-emerald-100 text-[10px] font-semibold border border-white/20">
+                    Tarif Khusus Civitas Aktif
                 </span>
-                <h2 class="text-sm font-extrabold mt-1.5 leading-snug">
-                    Halo, {{ auth()->user()->name ?? 'Civitas UNWAHAS' }}!
+                <h2 class="text-sm font-bold mt-1.5 leading-snug">
+                    Halo, {{ auth()->user()->name ?? 'Civitas UNWAHAS' }}
                 </h2>
                 <p id="mobileHeroDesc" class="text-[11px] text-emerald-100/90 mt-0.5 leading-relaxed">
                     Satu pintu layanan logistik kampus, katering, tour & konveksi resmi PT Buana Sejahtera.
                 </p>
             </div>
             @if (auth()->user()?->isAdmin())
-                <a href="/admin" class="shrink-0 px-3 py-2 bg-amber-400 text-amber-950 font-extrabold text-[11px] rounded-xl shadow-xs">
-                    📊 Admin
+                <a href="/admin" class="shrink-0 px-3 py-2 bg-amber-400 text-amber-950 font-bold text-[11px] rounded-xl shadow-xs">
+                    Admin
                 </a>
             @endif
         </div>
@@ -159,30 +159,34 @@
                 </div>
             </a>
 
-            <a href="{{ route('water.index') }}" data-keywords="galon air mineral unwahas 19l botol dus langganan" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] hover:border-emerald-200 transition group">
+            <a href="{{ route('water.index') }}" data-keywords="galon air mineral unwahas 19l botol dus langganan" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-slate-200/80 rounded-2xl shadow-2xs hover:border-emerald-300 transition group">
                 <div class="flex items-center gap-3">
-                    <div class="w-14 h-14 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shrink-0">💧</div>
+                    <div class="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.25c-3.5 4.2-6 7.45-6 10.75a6 6 0 1012 0c0-3.3-2.5-6.55-6-10.75z"/></svg>
+                    </div>
                     <div>
-                        <h3 class="text-xs font-bold text-gray-900 group-hover:text-[#0D5A47] transition">Galon Air Mineral Unwahas 19L</h3>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Langganan Rutin &bull; Bebas Ongkir Kampus</p>
+                        <h3 class="text-xs font-bold text-slate-900 group-hover:text-[#0D5A47] transition">Galon Air Mineral Unwahas 19L</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Langganan Rutin &bull; Bebas Ongkir Kampus</p>
                     </div>
                 </div>
-                <div class="text-gray-400 group-hover:text-[#0D5A47] transition pr-1">
+                <div class="text-slate-400 group-hover:text-[#0D5A47] transition pr-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                 </div>
             </a>
 
-            <a href="{{ route('konveksi.index') }}" data-keywords="jas almamater pdh bem ormawa konveksi kuotasi" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] hover:border-emerald-200 transition group">
+            <a href="{{ route('konveksi.index') }}" data-keywords="jas almamater pdh bem ormawa konveksi kuotasi" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-slate-200/80 rounded-2xl shadow-2xs hover:border-emerald-300 transition group">
                 <div class="flex items-center gap-3">
-                    <div class="w-14 h-14 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-2xl shrink-0">👕</div>
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
+                    </div>
                     <div>
-                        <h3 class="text-xs font-bold text-gray-900 group-hover:text-[#0D5A47] transition">Kuotasi PDH & Jas Almamater</h3>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Estimasi Harga Otomatis &bull; Live Tracking Jahit</p>
+                        <h3 class="text-xs font-bold text-slate-900 group-hover:text-[#0D5A47] transition">Kuotasi PDH & Jas Almamater</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Estimasi Harga Otomatis &bull; Progres Produksi</p>
                     </div>
                 </div>
-                <div class="text-gray-400 group-hover:text-[#0D5A47] transition pr-1">
+                <div class="text-slate-400 group-hover:text-[#0D5A47] transition pr-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
@@ -191,25 +195,17 @@
         </div>
     </div>
 
-    {{-- Section Pintasan Riwayat & Pelacakan --}}
-    <div class="mt-6 pt-5 border-t border-gray-100">
-        <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Pelacakan & Riwayat Transaksi</h2>
+    {{-- Section Pintasan Akun & Poin --}}
+    <div class="mt-6 pt-5 border-t border-slate-100">
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Akun & Keanggotaan</h2>
         <div class="grid grid-cols-2 gap-2.5 text-xs">
-            <a href="{{ route('water.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
-                <span>🚚</span>
-                <span>Lacak Air Mineral</span>
+            <a href="{{ route('account.index') }}" class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2.5 font-semibold text-slate-700 hover:border-emerald-300">
+                <svg class="w-4 h-4 text-[#0D5A47] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span>Profil & Alamat</span>
             </a>
-            <a href="{{ route('food.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
-                <span>🍱</span>
-                <span>Riwayat Katering</span>
-            </a>
-            <a href="{{ route('tour.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
-                <span>🕋</span>
-                <span>Cicilan Tour/Umrah</span>
-            </a>
-            <a href="{{ route('ticketing.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
-                <span>🎫</span>
-                <span>E-Boarding Pass</span>
+            <a href="{{ route('loyalty.index') }}" class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center gap-2.5 font-semibold text-amber-900 hover:border-amber-300">
+                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Loyalty Points</span>
             </a>
         </div>
     </div>
@@ -232,9 +228,8 @@
         </div>
 
         <div class="relative z-10 max-w-3xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 text-xs font-semibold mb-4">
-                <span>🏢</span>
-                <span>PT BUANA SEJAHTERA SEMARANG • YAYASAN WAHID HASYIM</span>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-emerald-100 border border-white/20 text-[11px] font-semibold tracking-wide mb-4">
+                <span>PT BUANA SEJAHTERA SEMARANG &bull; YAYASAN WAHID HASYIM</span>
             </div>
             <h1 class="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
                 Dari kebutuhan kampus menuju pasar yang lebih luas
@@ -280,8 +275,8 @@
                 <div>
                     <div class="relative rounded-2xl overflow-hidden border border-gray-200 mb-4 bg-white">
                         <img src="{{ asset('images/paket_rapat_fakultas.jpg') }}" alt="Paket Rapat Fakultas" class="w-full h-48 object-cover">
-                        <span class="absolute top-3 left-3 px-3 py-1 bg-[#0D5A47] text-white font-bold text-xs rounded-full shadow-sm">
-                            ⭐ Terlaris di UNWAHAS
+                        <span class="absolute top-3 left-3 px-3 py-1 bg-[#0D5A47] text-white font-semibold text-[11px] rounded-full shadow-sm">
+                            Terlaris di UNWAHAS
                         </span>
                     </div>
                     <h3 class="text-lg font-bold text-gray-900">Paket Rapat Fakultas</h3>
@@ -373,75 +368,75 @@
 
         <div class="grid grid-cols-5 gap-5">
             {{-- 1. Air Mineral --}}
-            <a href="{{ route('water.index') }}" class="group bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
+            <a href="{{ route('water.index') }}" class="group bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-xl mb-3 group-hover:scale-105 transition">
-                        💧
+                    <div class="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100 text-sky-700 flex items-center justify-center mb-3.5 group-hover:scale-105 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.25c-3.5 4.2-6 7.45-6 10.75a6 6 0 1012 0c0-3.3-2.5-6.55-6-10.75z"/></svg>
                     </div>
-                    <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#0D5A47] transition">Air Mineral Unwahas</h3>
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">Pemesanan rutin galon 19L & karton botol/gelas untuk rapat dan kantor.</p>
+                    <h3 class="font-bold text-sm text-slate-900 group-hover:text-[#0D5A47] transition">Air Mineral Unwahas</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Pemesanan rutin galon 19L & karton botol/gelas untuk rapat dan kantor.</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
                     <span>Buka Katalog</span>
                     <span>&rarr;</span>
                 </div>
             </a>
 
             {{-- 2. Buana Food --}}
-            <a href="{{ route('food.index') }}" class="group bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
+            <a href="{{ route('food.index') }}" class="group bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-xl mb-3 group-hover:scale-105 transition">
-                        🍱
+                    <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 flex items-center justify-center mb-3.5 group-hover:scale-105 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m-8 10a8 8 0 0116 0H4zm-1 3h18"/></svg>
                     </div>
-                    <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#0D5A47] transition">Buana Food Services</h3>
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">Katering, snack box, nasi kotak & menu anggaran sesuai rundown acara.</p>
+                    <h3 class="font-bold text-sm text-slate-900 group-hover:text-[#0D5A47] transition">Buana Food Services</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Katering, snack box, nasi kotak & menu anggaran sesuai rundown acara.</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
                     <span>Buka Katalog</span>
                     <span>&rarr;</span>
                 </div>
             </a>
 
             {{-- 3. Tour & Travel --}}
-            <a href="{{ route('tour.index') }}" class="group bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
+            <a href="{{ route('tour.index') }}" class="group bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-[#0D5A47] flex items-center justify-center text-xl mb-3 group-hover:scale-105 transition">
-                        ✈️
+                    <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 text-[#0D5A47] flex items-center justify-center mb-3.5 group-hover:scale-105 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
-                    <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#0D5A47] transition">Buana Tour & Travel</h3>
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">Wisata, ziarah wali, KKL rombongan fakultas & tabungan cicilan Umrah.</p>
+                    <h3 class="font-bold text-sm text-slate-900 group-hover:text-[#0D5A47] transition">Buana Tour & Travel</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Wisata, ziarah wali, KKL rombongan fakultas & tabungan cicilan Umrah.</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
                     <span>Buka Katalog</span>
                     <span>&rarr;</span>
                 </div>
             </a>
 
             {{-- 4. Ticketing --}}
-            <a href="{{ route('ticketing.index') }}" class="group bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
+            <a href="{{ route('ticketing.index') }}" class="group bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center text-xl mb-3 group-hover:scale-105 transition">
-                        🎫
+                    <div class="w-11 h-11 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center mb-3.5 group-hover:scale-105 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
                     </div>
-                    <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#0D5A47] transition">Buana Ticketing</h3>
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">Transportasi dinas, tiket kereta/pesawat, dan tiket seminar Yayasan.</p>
+                    <h3 class="font-bold text-sm text-slate-900 group-hover:text-[#0D5A47] transition">Buana Ticketing</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Transportasi dinas, tiket kereta/pesawat, dan tiket seminar Yayasan.</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
                     <span>Buka Katalog</span>
                     <span>&rarr;</span>
                 </div>
             </a>
 
             {{-- 5. Konveksi --}}
-            <a href="{{ route('konveksi.index') }}" class="group bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
+            <a href="{{ route('konveksi.index') }}" class="group bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex flex-col justify-between">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-pink-50 text-pink-700 flex items-center justify-center text-xl mb-3 group-hover:scale-105 transition">
-                        👕
+                    <div class="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center justify-center mb-3.5 group-hover:scale-105 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
                     </div>
-                    <h3 class="font-bold text-sm text-gray-900 group-hover:text-[#0D5A47] transition">Buana Konveksi</h3>
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">Jas almamater, PDH/PDL, kaos seragam & pelacakan progres jahit real-time.</p>
+                    <h3 class="font-bold text-sm text-slate-900 group-hover:text-[#0D5A47] transition">Buana Konveksi</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Jas almamater, PDH/PDL, kaos seragam & pelacakan progres jahit real-time.</p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
                     <span>Buka Katalog</span>
                     <span>&rarr;</span>
                 </div>
@@ -496,12 +491,12 @@ function switchMobileTab(type) {
     if (type === 'unwahas') {
         buttons[0].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-semibold bg-[#0D5A47] text-white shadow-xs text-center transition";
         buttons[1].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-medium text-gray-600 hover:text-gray-900 text-center transition";
-        if (badge) badge.innerText = "🎓 Tarif Khusus Civitas Aktif";
+        if (badge) badge.innerText = "Tarif Khusus Civitas Aktif";
         if (priceLabel) priceLabel.innerText = "Mulai Rp15.000 / orang (Harga Civitas)";
     } else {
         buttons[1].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-semibold bg-[#0D5A47] text-white shadow-xs text-center transition";
         buttons[0].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-medium text-gray-600 hover:text-gray-900 text-center transition";
-        if (badge) badge.innerText = "🌐 Katalog Pasar Umum";
+        if (badge) badge.innerText = "Katalog Pasar Umum";
         if (priceLabel) priceLabel.innerText = "Mulai Rp18.000 / orang (Harga Umum)";
     }
 }

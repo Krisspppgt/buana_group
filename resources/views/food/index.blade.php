@@ -2,7 +2,7 @@
 @section('title', 'Buana Food Services - Katering & Snack Box')
 
 @section('content')
-<div class="bg-gradient-to-r from-amber-800 via-orange-800 to-amber-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+<div class="bg-gradient-to-r from-amber-800 via-orange-800 to-amber-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
     <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -11,20 +11,19 @@
                 <span>&bull;</span>
                 <span class="uppercase tracking-wider">Unit 2 &bull; Katering & Konsumsi Kampus</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">🍱 Buana Food Services</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Buana Food Services</h1>
             <p class="text-xs sm:text-sm text-amber-100 mt-1 max-w-xl">
                 Snack box, nasi kotak, katering prasmanan, kalkulator anggaran otomatis & penjadwalan pengiriman bertahap sesuai rundown acara.
             </p>
         </div>
         <a href="{{ route('food.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            📋 Riwayat Katering
+            Riwayat Katering
         </a>
     </div>
 </div>
 
 @if ($user->isCivitas())
     <div class="eco-banner" style="margin-bottom: 16px;">
-        <span style="font-size: 1.25rem;">🎓</span>
         <div>
             <b>Diskon Civitas Unwahas Aktif</b>
             <div style="font-size: 0.8rem; opacity: 0.9;">Dapatkan harga khusus mahasiswa, dosen & panitia ormawa kampus.</div>
@@ -43,7 +42,6 @@
 {{-- FITUR 1: INTERACTIVE BUDGET CALCULATOR --}}
 <div class="card" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; margin-bottom: 18px; padding: 16px;">
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <span style="font-size:1.3rem;">💡</span>
         <div style="font-weight:700; font-size:0.95rem; color:#92400e;">Budget Calculator Acara</div>
     </div>
     <p style="font-size:0.82rem; color:#b45309; margin:0 0 10px;">
@@ -84,10 +82,10 @@
 
         <label for="diet_pref">Preferensi Diet / Khusus *</label>
         <select name="diet_pref" id="diet_pref" style="width:100%; padding:11px; border:1px solid #cbd5e1; border-radius:10px; font-size:0.92rem; background:#fff;">
-            <option value="Reguler (Standar Halal)" selected>🥗 Reguler (Menu Masakan Nusantara)</option>
-            <option value="Vegetarian">🌱 Vegetarian (Bebas Daging, Nabati & Tahu/Tempe)</option>
-            <option value="Rendah Gula (Diabetes-friendly)">🩺 Rendah Gula (Gula Rendah Kalori & Porsi Serat)</option>
-            <option value="Bebas MSG / Sehat Alami">🍃 Bebas MSG (Rempah Alami Non-Pengawet)</option>
+            <option value="Reguler (Standar Halal)" selected>Reguler (Menu Masakan Nusantara)</option>
+            <option value="Vegetarian">Vegetarian (Bebas Daging, Nabati & Tahu/Tempe)</option>
+            <option value="Rendah Gula (Diabetes-friendly)">Rendah Gula (Gula Rendah Kalori & Porsi Serat)</option>
+            <option value="Bebas MSG / Sehat Alami">Bebas MSG (Rempah Alami Non-Pengawet)</option>
         </select>
     </div>
 
@@ -160,8 +158,8 @@
                 </div>
 
                 @if ($p->price_bulk && $p->bulk_min)
-                    <div style="font-size: 0.73rem; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 4px 8px; border-radius: 6px; color: #475569;">
-                        🏷️ Pesan &ge; {{ $p->bulk_min }} {{ $p->uom }}: <b>Rp {{ number_format($p->price_bulk, 0, ',', '.') }}</b>/{{ $p->uom }} (Diskon Partai Besar)
+                    <div style="font-size: 0.73rem; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 5px 8px; border-radius: 6px; color: #475569;">
+                        Grosir &ge; {{ $p->bulk_min }} {{ $p->uom }}: <b>Rp {{ number_format($p->price_bulk, 0, ',', '.') }}</b>/{{ $p->uom }} (Diskon Partai Besar)
                     </div>
                 @endif
 
@@ -227,8 +225,8 @@
             <span id="food_summary_total" style="font-weight: 800; font-size: 1.25rem; color: #0f766e;">Rp 0</span>
         </div>
 
-        <button type="submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 1rem;">
-            🚀 Jadwalkan Katering Sekarang
+        <button type="submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 0.95rem;">
+            Jadwalkan Katering Sekarang
         </button>
     </div>
     </div>
