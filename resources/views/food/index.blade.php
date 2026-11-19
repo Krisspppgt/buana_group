@@ -2,17 +2,24 @@
 @section('title', 'Buana Food Services - Katering & Snack Box')
 
 @section('content')
-<div style="margin-bottom: 16px;">
-    <a href="{{ route('home') }}" style="color:var(--muted); text-decoration:none; font-size:0.88rem; display:inline-flex; align-items:center; gap:4px;">
-        &larr; Kembali ke Beranda
-    </a>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-        <h1 style="margin:0; font-size:1.25rem;">🍱 Buana Food Services</h1>
-        <a href="{{ route('food.history') }}" style="color:var(--brand); text-decoration:none; font-size:0.85rem; font-weight:600;">
-            Riwayat Katering
+<div class="bg-gradient-to-r from-amber-800 via-orange-800 to-amber-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-amber-200 font-semibold mb-2">
+                <a href="{{ route('home') }}" class="hover:text-white">&larr; Beranda</a>
+                <span>&bull;</span>
+                <span class="uppercase tracking-wider">Unit 2 &bull; Katering & Konsumsi Kampus</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">🍱 Buana Food Services</h1>
+            <p class="text-xs sm:text-sm text-amber-100 mt-1 max-w-xl">
+                Snack box, nasi kotak, katering prasmanan, kalkulator anggaran otomatis & penjadwalan pengiriman bertahap sesuai rundown acara.
+            </p>
+        </div>
+        <a href="{{ route('food.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
+            📋 Riwayat Katering
         </a>
     </div>
-    <p class="sub" style="margin-top:2px;">Snack box, nasi kotak, katering prasmanan & penjadwalan rundown acara.</p>
 </div>
 
 @if ($user->isCivitas())
@@ -59,9 +66,10 @@
     </div>
 </div>
 
-<form method="POST" action="{{ route('food.store') }}" id="foodOrderForm">
+<form method="POST" action="{{ route('food.store') }}" id="foodOrderForm" class="unit-grid-2col">
     @csrf
 
+    <div>
     {{-- FITUR 2: PREFERENSI DIET & INFORMASI ACARA --}}
     <div class="card" style="margin-bottom: 18px;">
         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color:#0f172a;">
@@ -182,7 +190,9 @@
             </div>
         @endforeach
     </div>
+    </div>
 
+    <div class="unit-sticky-col">
     {{-- 5. LOKASI PENGANTARAN --}}
     <div class="card" style="margin-bottom: 20px;">
         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color:#0f172a;">
@@ -220,6 +230,7 @@
         <button type="submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 1rem;">
             🚀 Jadwalkan Katering Sekarang
         </button>
+    </div>
     </div>
 </form>
 

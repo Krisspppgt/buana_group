@@ -124,10 +124,36 @@ class FoodServiceController extends Controller
 
         $order = Order::with(['items.product', 'user'])
             ->where('code', $code)
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
         return view('food.show', compact('order'));
+    }
+
+    /**
+     * Update status tahapan pengantaran rundown katering.
+     */
+    public function updateStatus(Request $request, string $code): RedirectResponse
+    {
+        $user = $request->user();
+
+        $order = Order::where('code', $code)
+            ->where('unit', Unit::Food)
+            ->firstOrFail();
+
+        if (! $user->isStaff() && $order->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk memperbarui status katering ini.');
+        }
+
+        $data = $request->validate([
+            'status' => ['required', 'integer', 'in:2,3,4'],
+        ]);
+
+        $newStatus = OrderStatus::from((int) $data['status']);
+
+        $order->update(['status' => $newStatus]);
+
+        return back()->with('success', "Status pengantaran katering berhasil diperbarui ke: {$newStatus->label()}.");
     }
 
     /**

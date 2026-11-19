@@ -58,8 +58,40 @@
 
     <!-- TAB 1: AGREGATOR TRANSPORTASI -->
     <div x-show="activeTab === 'transport'" class="space-y-4">
+        <!-- Form Pencarian & Filter Agregator Transportasi -->
+        <form method="GET" action="{{ route('ticketing.index') }}" class="bg-white p-4 rounded-3xl border border-gray-200 shadow-2xs grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-4">
+                <label class="text-xs font-bold text-gray-700 block mb-1 mt-0">Cari Rute / Kota / Operator</label>
+                <input type="text" name="q" value="{{ $searchQuery ?? '' }}" placeholder="Contoh: Semarang, Jakarta, Garuda, KAI..." class="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-xl">
+            </div>
+            <div class="sm:col-span-3">
+                <label class="text-xs font-bold text-gray-700 block mb-1 mt-0">Moda Transportasi</label>
+                <select name="mode" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl">
+                    <option value="all" @selected(($selectedMode ?? '') === '' || ($selectedMode ?? '') === 'all')>Semua Moda Transportasi</option>
+                    <option value="kereta" @selected(($selectedMode ?? '') === 'kereta')>🚆 Kereta Api (KAI)</option>
+                    <option value="pesawat" @selected(($selectedMode ?? '') === 'pesawat')>✈️ Pesawat Terbang</option>
+                    <option value="bus" @selected(($selectedMode ?? '') === 'bus')>🚌 Bus AKAP Antarkota</option>
+                    <option value="kapal" @selected(($selectedMode ?? '') === 'kapal')>🚢 Kapal Laut (PELNI)</option>
+                </select>
+            </div>
+            <div class="sm:col-span-3">
+                <label class="text-xs font-bold text-gray-700 block mb-1 mt-0">Tanggal Keberangkatan</label>
+                <input type="date" name="date" value="{{ $travelDate ?? '' }}" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl">
+            </div>
+            <div class="sm:col-span-2 flex gap-1.5">
+                <button type="submit" class="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                    🔍 Cari
+                </button>
+                @if(!empty($searchQuery) || (!empty($selectedMode) && $selectedMode !== 'all') || !empty($travelDate))
+                    <a href="{{ route('ticketing.index') }}" class="py-2.5 px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl">
+                        ↺
+                    </a>
+                @endif
+            </div>
+        </form>
+
         <div class="flex items-center justify-between text-xs text-gray-500">
-            <span>Menampilkan jadwal & rute keberangkatan terverifikasi langsung dengan operator transportasi</span>
+            <span>Menampilkan {{ count($transportRoutes) }} jadwal & rute keberangkatan terverifikasi langsung dengan operator transportasi</span>
             <span class="font-bold text-blue-700">Terintegrasi E-Boarding Pass</span>
         </div>
 

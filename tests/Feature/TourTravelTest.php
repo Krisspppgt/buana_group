@@ -108,4 +108,35 @@ class TourTravelTest extends TestCase
         $response->assertSee('Cicilan / Tabungan Umrah');
         $response->assertSee('H. Ahmad Sobari');
     }
+
+    public function test_user_can_pay_tour_installment_until_paid_off(): void
+    {
+        $package = TourPackage::where('category', 'umrah')->first();
+
+        $booking = TourBooking::create([
+            'code' => TourBooking::newCode(),
+            'user_id' => $this->customer->id,
+            'tour_package_id' => $package->id,
+            'coordinator_name' => 'H. Ahmad Sobari',
+            'coordinator_phone' => '081234567890',
+            'total_pax' => 1,
+            'payment_scheme' => 'cicilan',
+            'installment_tenor' => 6,
+            'paid_amount' => 20000000,
+            'total_amount' => 28500000,
+            'members_data' => [['name' => 'H. Ahmad Sobari', 'id_number' => '3301010101900001']],
+            'status' => 1,
+        ]);
+
+        $this->actingAs($this->customer)
+            ->post(route('tour.bookings.pay', $booking->code), [
+                'amount' => 8500000,
+                'payment_method' => 'QRIS Terpadu Buana',
+            ])
+            ->assertRedirect();
+
+        $booking->refresh();
+        $this->assertEquals(28500000, $booking->paid_amount);
+        $this->assertEquals(2, $booking->status);
+    }
 }

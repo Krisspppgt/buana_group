@@ -123,10 +123,40 @@ class WaterOrderController extends Controller
 
         $order = Order::with(['items.product', 'user'])
             ->where('code', $code)
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
         return view('water.track', compact('order'));
+    }
+
+    /**
+     * Update status pengiriman armada logistik oleh Kurir/Admin atau konfirmasi terima oleh Pelanggan.
+     */
+    public function updateStatus(Request $request, string $code): RedirectResponse
+    {
+        $user = $request->user();
+
+        $order = Order::where('code', $code)
+            ->where('unit', Unit::Air)
+            ->firstOrFail();
+
+        if (! $user->isStaff() && $order->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah status pesanan ini.');
+        }
+
+        $data = $request->validate([
+            'status' => ['required', 'integer', 'in:2,3,4'],
+        ]);
+
+        $newStatus = OrderStatus::from((int) $data['status']);
+
+        if (! $user->isStaff() && $newStatus !== OrderStatus::Done) {
+            abort(403, 'Pelanggan hanya dapat melakukan konfirmasi pesanan selesai diterima.');
+        }
+
+        $order->update(['status' => $newStatus]);
+
+        return back()->with('success', "Status pengiriman armada berhasil diperbarui ke: {$newStatus->label()}.");
     }
 
     /**

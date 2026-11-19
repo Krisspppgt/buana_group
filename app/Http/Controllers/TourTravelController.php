@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Unit;
 use App\Models\TourBooking;
 use App\Models\TourPackage;
 use Illuminate\Http\RedirectResponse;
@@ -112,6 +113,15 @@ class TourTravelController extends Controller
 
             $package->increment('booked', $pax);
 
+            if ($paidAmount > 0) {
+                $user->earnLoyaltyPoints(
+                    $paidAmount,
+                    Unit::Tour,
+                    $booking->code,
+                    "Setoran Awal Tour {$package->title} #{$booking->code}"
+                );
+            }
+
             return $booking;
         });
 
@@ -127,10 +137,55 @@ class TourTravelController extends Controller
         $user = $request->user();
         $booking = TourBooking::with(['tourPackage', 'user'])
             ->where('code', $code)
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
         return view('tour.booking_detail', compact('booking'));
+    }
+
+    /**
+     * Mencatat pembayaran setoran angsuran / cicilan tabungan perjalanan di dalam aplikasi.
+     */
+    public function payInstallment(Request $request, string $code): RedirectResponse
+    {
+        $user = $request->user();
+        $booking = TourBooking::where('code', $code)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        $remaining = max(0, $booking->total_amount - $booking->paid_amount);
+
+        if ($remaining <= 0) {
+            return back()->with('success', 'Tagihan perjalanan rombongan ini sudah lunas 100%.');
+        }
+
+        $data = $request->validate([
+            'amount' => ['required', 'integer', 'min:10000'],
+            'payment_method' => ['required', 'string', 'max:30'],
+        ]);
+
+        $payAmount = min($remaining, (int) $data['amount']);
+        $newPaid = $booking->paid_amount + $payAmount;
+        $isFullyPaid = $newPaid >= $booking->total_amount;
+
+        $booking->update([
+            'paid_amount' => $newPaid,
+            'status' => $isFullyPaid ? 2 : 1,
+        ]);
+
+        $earnedPoints = $user->earnLoyaltyPoints(
+            $payAmount,
+            Unit::Tour,
+            $booking->code,
+            "Angsuran Tour #{$booking->code} via {$data['payment_method']}"
+        );
+
+        $formattedAmount = number_format($payAmount, 0, ',', '.');
+        $statusMsg = $isFullyPaid
+            ? "Alhamdulillah! Setoran Rp {$formattedAmount} via {$data['payment_method']} diterima (+{$earnedPoints} Poin). Pembayaran kini LUNAS 100%!"
+            : "Setoran angsuran sebesar Rp {$formattedAmount} via {$data['payment_method']} berhasil tercatat (+{$earnedPoints} Poin).";
+
+        return back()->with('success', $statusMsg);
     }
 
     /**
