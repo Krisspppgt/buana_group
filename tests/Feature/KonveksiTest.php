@@ -88,4 +88,40 @@ class KonveksiTest extends TestCase
         $response->assertSee('Jahit');
         $response->assertSee('Sedang proses jahit kemeja angkatan 30 pcs');
     }
+
+    public function test_user_can_approve_quote_to_create_production_order_and_operator_can_update_stage(): void
+    {
+        $quote = Quote::create([
+            'user_id' => $this->user->id,
+            'item' => 'Jas Almamater (Japan Drill)',
+            'qty' => 50,
+            'sizes' => 'M:25, L:25',
+            'est_price' => 6000000,
+            'status' => QuoteStatus::Submitted,
+        ]);
+
+        $response = $this->actingAs($this->user)->post(route('konveksi.quotes.approve', $quote->id), [
+            'ship_addr' => 'Fakultas Kedokteran UNWAHAS',
+        ]);
+
+        $quote->refresh();
+        $this->assertEquals(QuoteStatus::Approved, $quote->status);
+        $this->assertNotNull($quote->order_id);
+
+        $order = Order::find($quote->order_id);
+        $this->assertNotNull($order);
+        $response->assertRedirect(route('konveksi.tracking', $order->code));
+
+        $operator = User::factory()->create([
+            'role' => Role::Operator,
+            'phone' => '086699887766',
+        ]);
+
+        $this->actingAs($operator)->post(route('konveksi.tracking.stage', $order->code), [
+            'stage' => ProductionStage::Cutting->value,
+            'note' => 'Pemotongan kain 50 pcs selesai',
+        ])->assertRedirect();
+
+        $this->assertEquals(ProductionStage::Cutting, $order->productionLogs()->latest('id')->first()->stage);
+    }
 }

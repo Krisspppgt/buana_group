@@ -140,4 +140,16 @@ class TicketingTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('warning');
     }
+
+    public function test_user_can_filter_transport_routes_by_mode_and_search(): void
+    {
+        $response = $this->actingAs($this->customer)->get(route('ticketing.index', [
+            'mode' => 'pesawat',
+            'q' => 'Garuda',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Garuda Indonesia GA-234');
+        $response->assertDontSee('KA Argo Sindoro');
+    }
 }

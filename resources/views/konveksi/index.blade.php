@@ -2,17 +2,24 @@
 @section('title', 'Buana Konveksi - Jas Almamater, PDH & Kaos')
 
 @section('content')
-<div style="margin-bottom: 16px;">
-    <a href="{{ route('home') }}" style="color:var(--muted); text-decoration:none; font-size:0.88rem; display:inline-flex; align-items:center; gap:4px;">
-        &larr; Kembali ke Beranda
-    </a>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-        <h1 style="margin:0; font-size:1.25rem;">👕 Buana Konveksi</h1>
-        <a href="{{ route('konveksi.quotes') }}" style="color:var(--brand); text-decoration:none; font-size:0.85rem; font-weight:600;">
-            Riwayat Kuotasi
+<div class="bg-gradient-to-r from-pink-900 via-rose-800 to-purple-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-pink-200 font-semibold mb-2">
+                <a href="{{ route('home') }}" class="hover:text-white">&larr; Beranda</a>
+                <span>&bull;</span>
+                <span class="uppercase tracking-wider">Unit 5 &bull; Produksi Garmen & Seragam</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">👕 Buana Konveksi</h1>
+            <p class="text-xs sm:text-sm text-pink-100 mt-1 max-w-xl">
+                Katalog bahan kain pilihan, portofolio jas almamater & PDH/PDL, kalkulasi kuotasi otomatis, dan pelacakan progres jahit transparan.
+            </p>
+        </div>
+        <a href="{{ route('konveksi.quotes') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
+            📋 Riwayat Kuotasi & Tracking
         </a>
     </div>
-    <p class="sub" style="margin-top:2px;">Katalog bahan, portofolio almamater, sistem kuotasi & upload desain mockup.</p>
 </div>
 
 @if ($user->isCivitas())
@@ -33,6 +40,8 @@
     </div>
 @endif
 
+<div class="unit-grid-2col">
+<div>
 {{-- 1. KATALOG BAHAN KAIN & WARNA --}}
 <div class="card" style="margin-bottom: 18px; padding: 16px;">
     <div style="font-weight: 700; font-size: 0.95rem; color:#0f172a; margin-bottom: 10px;">
@@ -88,9 +97,10 @@
         @endforeach
     </div>
 </div>
+</div>
 
 {{-- 3. FORM SISTEM KUOTASI & UPLOAD DESAIN --}}
-<form method="POST" action="{{ route('konveksi.quotes.store') }}" enctype="multipart/form-data" id="quoteForm">
+<form method="POST" action="{{ route('konveksi.quotes.store') }}" enctype="multipart/form-data" id="quoteForm" class="unit-sticky-col">
     @csrf
 
     <div class="card" style="margin-bottom: 20px; border-top: 3px solid #0f766e; padding: 18px;">
@@ -176,6 +186,7 @@
         </button>
     </div>
 </form>
+</div>
 
 <script>
     function calculateQuoteEstimate() {

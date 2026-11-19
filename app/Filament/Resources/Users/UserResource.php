@@ -63,6 +63,12 @@ class UserResource extends Resource
                     ->placeholder('Kosongkan jika pelanggan umum')
                     ->maxLength(20),
 
+                TextInput::make('loyalty_points')
+                    ->label('Saldo Buana Loyalty Points')
+                    ->numeric()
+                    ->default(0)
+                    ->minValue(0),
+
                 Select::make('role')
                     ->label('Peran / Hak Akses')
                     ->options([
@@ -108,6 +114,13 @@ class UserResource extends Resource
                     ->badge()
                     ->color('info')
                     ->placeholder('Umum'),
+
+                TextColumn::make('loyalty_points')
+                    ->label('Buana Points')
+                    ->badge()
+                    ->color('warning')
+                    ->formatStateUsing(fn (int $state): string => number_format($state, 0, ',', '.').' Poin')
+                    ->sortable(),
 
                 TextColumn::make('role')
                     ->label('Role Sistem')

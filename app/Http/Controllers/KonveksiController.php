@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Enums\ProductionStage;
 use App\Enums\QuoteStatus;
 use App\Enums\Unit;
 use App\Models\Order;
+use App\Models\ProductionLog;
 use App\Models\Quote;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class KonveksiController extends Controller
@@ -142,11 +145,69 @@ class KonveksiController extends Controller
     public function showQuote(Request $request, int $id): View
     {
         $user = $request->user();
-        $quote = Quote::where('id', $id)
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+        $quote = Quote::with('order')
+            ->where('id', $id)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
         return view('konveksi.quote_detail', compact('quote'));
+    }
+
+    /**
+     * Menyetujui kuotasi konveksi dan menerbitkan Order Produksi beserta log tahap awal.
+     */
+    public function approveQuote(Request $request, int $id): RedirectResponse
+    {
+        $user = $request->user();
+        $quote = Quote::with('user')
+            ->where('id', $id)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        if ($quote->order_id && $quote->order) {
+            return redirect()->route('konveksi.tracking', $quote->order->code);
+        }
+
+        $data = $request->validate([
+            'ship_addr' => ['required', 'string', 'max:150'],
+        ]);
+
+        $order = DB::transaction(function () use ($quote, $data) {
+            $agreedPrice = (int) ($quote->final_price ?? $quote->est_price);
+            $customer = $quote->user;
+
+            $order = Order::create([
+                'code' => Order::newCode(),
+                'user_id' => $quote->user_id,
+                'unit' => Unit::Konveksi,
+                'status' => OrderStatus::Processing,
+                'subtotal' => $agreedPrice,
+                'ship_fee' => 0,
+                'total' => $agreedPrice,
+                'ship_name' => $customer?->name ?? 'Pelanggan Konveksi',
+                'ship_phone' => $customer?->phone ?? '081234567890',
+                'ship_addr' => $data['ship_addr'],
+                'note' => substr("Konveksi #{$quote->id}: {$quote->item} ({$quote->qty} pcs)", 0, 100),
+                'send_at' => now()->addDays(14),
+            ]);
+
+            ProductionLog::create([
+                'order_id' => $order->id,
+                'stage' => ProductionStage::WaitingMaterial,
+                'note' => 'Kuotasi disetujui pemesan. Persiapan gulungan kain & palet warna dimulai.',
+            ]);
+
+            $quote->update([
+                'final_price' => $agreedPrice,
+                'status' => QuoteStatus::Approved,
+                'order_id' => $order->id,
+            ]);
+
+            return $order;
+        });
+
+        return redirect()->route('konveksi.tracking', $order->code)
+            ->with('success', 'Kuotasi berhasil disetujui! Pesanan produksi telah diterbitkan dan masuk ke antrean workshop.');
     }
 
     /**
@@ -158,12 +219,47 @@ class KonveksiController extends Controller
         $order = Order::with(['productionLogs' => fn ($q) => $q->latest('id'), 'items.product'])
             ->where('code', $code)
             ->where('unit', Unit::Konveksi)
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
         // Ambil tahap terakhir
         $latestStage = $order->productionLogs->first()?->stage ?? ProductionStage::WaitingMaterial;
 
         return view('konveksi.tracking', compact('order', 'latestStage'));
+    }
+
+    /**
+     * Update tahapan produksi konveksi oleh Operator Workshop / Admin.
+     */
+    public function updateStage(Request $request, string $code): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->isStaff()) {
+            abort(403, 'Hanya Operator Workshop atau Admin yang dapat memperbarui tahap produksi.');
+        }
+
+        $order = Order::where('code', $code)
+            ->where('unit', Unit::Konveksi)
+            ->firstOrFail();
+
+        $data = $request->validate([
+            'stage' => ['required', 'integer', 'in:1,2,3,4,5,6'],
+            'note' => ['required', 'string', 'max:80'],
+        ]);
+
+        $stage = ProductionStage::from((int) $data['stage']);
+
+        ProductionLog::create([
+            'order_id' => $order->id,
+            'stage' => $stage,
+            'note' => $data['note'],
+        ]);
+
+        if ($stage === ProductionStage::ReadyToShip) {
+            $order->update(['status' => OrderStatus::Shipped]);
+        }
+
+        return back()->with('success', "Tahap produksi berhasil diperbarui ke: {$stage->label()}.");
     }
 }

@@ -113,12 +113,42 @@
     @endif
 </div>
 
-<div style="display: flex; gap: 10px;">
-    <a href="{{ route('konveksi.index') }}" class="btn" style="background:#db2777; text-decoration:none;">
-        👕 Pesan Konveksi Baru
+@auth
+    @if (auth()->user()->isStaff())
+        <div class="card" style="padding: 16px; margin-bottom: 20px; border: 1px solid #fbcfe8; background: #fdf2f8;">
+            <div style="font-weight: 700; font-size: 0.9rem; color: #9d174d; margin-bottom: 8px;">
+                🛠️ Panel Operator Workshop: Update Tahap Produksi
+            </div>
+            <form method="POST" action="{{ route('konveksi.tracking.stage', $order->code) }}" style="display: flex; flex-direction: column; gap: 10px;">
+                @csrf
+                <div>
+                    <label style="margin: 0 0 4px; font-size: 0.8rem;">Pilih Tahapan Pengerjaan</label>
+                    <select name="stage" style="padding: 8px 12px; font-size: 0.85rem;">
+                        @foreach (\App\Enums\ProductionStage::cases() as $stg)
+                            <option value="{{ $stg->value }}" @selected($latestStage === $stg)>
+                                {{ $stg->value }}. {{ $stg->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="margin: 0 0 4px; font-size: 0.8rem;">Catatan Operator Workshop</label>
+                    <input type="text" name="note" placeholder="Contoh: Pemotongan pola ukuran S-XXL telah selesai 100%" required maxlength="80" style="padding: 8px 12px; font-size: 0.85rem;">
+                </div>
+                <button type="submit" class="btn" style="background: #db2777; align-self: flex-start; padding: 8px 16px; font-size: 0.84rem;">
+                    Simpan Log Produksi
+                </button>
+            </form>
+        </div>
+    @endif
+@endauth
+
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="background:#0D5A47; text-decoration:none; flex: 1;">
+        💳 Payment Gateway & Tukar Poin (Rp {{ number_format($order->total, 0, ',', '.') }})
     </a>
-    <a href="{{ route('home') }}" class="btn btn-ghost" style="text-decoration:none;">
-        🏠 Beranda Super App
+    <a href="{{ route('konveksi.index') }}" class="btn" style="background:#db2777; text-decoration:none; flex: 1;">
+        👕 Pesan Konveksi Baru
     </a>
 </div>
 @endsection

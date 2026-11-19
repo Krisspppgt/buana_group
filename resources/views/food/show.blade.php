@@ -24,10 +24,16 @@
 {{-- KARTU STATUS PENGERJAAN DAPUR & RUNDOWN --}}
 <div class="card" style="padding: 18px; margin-bottom: 16px; border-top: 4px solid #d97706;">
     <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700;">
-        Status Pemrosesan Katering
+        Status Pemrosesan Katering ({{ $order->status->label() }})
     </div>
     <div style="font-size:1.15rem; font-weight:800; color:#b45309; margin-top:2px;">
-        👨‍🍳 Dapur Sedang Mempersiapkan Menu
+        @if ($order->status === \App\Enums\OrderStatus::Done)
+            ✅ Seluruh Sesi Rundown Katering Selesai Diantar
+        @elseif ($order->status === \App\Enums\OrderStatus::Shipped)
+            🚚 Armada Katering Sedang Mengantar Sesuai Rundown
+        @else
+            👨‍🍳 Dapur Sedang Mempersiapkan Menu
+        @endif
     </div>
     <div style="font-size:0.82rem; color:var(--muted); margin-top:2px;">
         Jadwal Pengantaran Acara: <b>{{ $order->send_at?->format('d M Y, H:i') ?? '-' }} WIB</b>
@@ -40,6 +46,32 @@
             <div>{{ $order->note }}</div>
         </div>
     @endif
+
+    @auth
+        @if ($order->status !== \App\Enums\OrderStatus::Done && (auth()->user()->isStaff() || $order->user_id === auth()->id()))
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #fde68a; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span style="font-size: 0.8rem; color: #92400e; font-weight: 600;">
+                    Update Status Pengiriman Rundown Acara:
+                </span>
+                <form method="POST" action="{{ route('food.status.update', $order->code) }}" style="display: flex; gap: 8px;">
+                    @csrf
+                    @if (auth()->user()->isStaff())
+                        <select name="status" style="padding: 6px 10px; font-size: 0.82rem; width: auto;">
+                            <option value="2" @selected($order->status === \App\Enums\OrderStatus::Processing)>👨‍🍳 Diproses Dapur</option>
+                            <option value="3" @selected($order->status === \App\Enums\OrderStatus::Shipped)>🚚 Dikirim Bertahap</option>
+                            <option value="4" @selected($order->status === \App\Enums\OrderStatus::Done)>✅ Selesai Semua Sesi</option>
+                        </select>
+                        <button type="submit" class="btn" style="background: #d97706; padding: 6px 14px; font-size: 0.8rem;">Update</button>
+                    @else
+                        <input type="hidden" name="status" value="4">
+                        <button type="submit" class="btn" style="background: #10b981; padding: 6px 14px; font-size: 0.8rem;">
+                            ✅ Konfirmasi Katering Diterima
+                        </button>
+                    @endif
+                </form>
+            </div>
+        @endif
+    @endauth
 </div>
 
 {{-- RINCIAN MENU --}}
@@ -72,6 +104,26 @@
         <span style="font-weight: 800; font-size: 1.15rem; color: #0f766e;">
             Rp {{ number_format($order->total, 0, ',', '.') }}
         </span>
+    </div>
+
+    @php
+        $paidRecord = $order->payments()->where('status', \App\Enums\PaymentStatus::Success)->latest('id')->first();
+    @endphp
+    <div style="margin-top: 12px; padding: 12px; border-radius: 12px; background: {{ $paidRecord ? '#ecfdf5' : '#fffbeb' }}; border: 1px solid {{ $paidRecord ? '#a7f3d0' : '#fde68a' }}; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div style="font-size: 0.8rem;">
+            @if ($paidRecord)
+                <b style="color: #065f46;">✅ Lunas via {{ strtoupper($paidRecord->method) }} ({{ $paidRecord->ref }})</b>
+                @if ($order->points_earned > 0)
+                    <div style="color: #047857; font-size: 0.75rem;">🪙 Reward: +{{ number_format($order->points_earned, 0, ',', '.') }} Buana Loyalty Points</div>
+                @endif
+            @else
+                <b style="color: #92400e;">💳 Payment Gateway Terpadu & Tukar Poin</b>
+                <div style="color: #b45309; font-size: 0.75rem;">Bayar via QRIS, Virtual Account, E-Wallet, atau Paylater/Tempo Civitas</div>
+            @endif
+        </div>
+        <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $paidRecord ? '#0D5A47' : '#d97706' }};">
+            {{ $paidRecord ? '📄 Bukti Pembayaran' : '💳 Bayar / Tukar Poin' }}
+        </a>
     </div>
 </div>
 

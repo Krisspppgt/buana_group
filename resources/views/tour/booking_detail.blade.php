@@ -119,15 +119,38 @@
                 </div>
 
                 @if($booking->payment_scheme === 'cicilan' && $remaining > 0)
-                    <div class="p-3 bg-white/80 rounded-xl border border-emerald-200 text-xs text-gray-700 flex items-center justify-between">
-                        <div>
-                            <span class="font-semibold text-emerald-900 block">Estimasi Angsuran Bulanan:</span>
-                            <span class="text-gray-500">Rp {{ number_format($perMonth, 0, ',', '.') }} / bulan (selama {{ $booking->installment_tenor }} bln)</span>
+                    <div class="p-4 bg-white rounded-2xl border border-emerald-200 text-xs text-gray-700 space-y-3 shadow-2xs">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <span class="font-bold text-emerald-900 block">Setor Angsuran / Tabungan Perjalanan:</span>
+                                <span class="text-gray-500">Estimasi bulanan: Rp {{ number_format($perMonth, 0, ',', '.') }} / bulan ({{ $booking->installment_tenor }} bln)</span>
+                            </div>
+                            <a href="https://wa.me/6282222222222?text=Halo%20Admin%20Buana%20Tour,%20saya%20ingin%20bayar%20angsuran%20booking%20{{ $booking->code }}" target="_blank" class="text-emerald-700 hover:underline font-semibold">
+                                💬 Konfirmasi via WA ↗
+                            </a>
                         </div>
-                        <a href="https://wa.me/6282222222222?text=Halo%20Admin%20Buana%20Tour,%20saya%20ingin%20bayar%20angsuran%20booking%20{{ $booking->code }}" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 shadow-sm inline-flex items-center space-x-1">
-                            <span>Bayar Cicilan</span>
-                            <span>➔</span>
-                        </a>
+
+                        <form method="POST" action="{{ route('tour.bookings.pay', $booking->code) }}" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-gray-100">
+                            @csrf
+                            <div>
+                                <label class="text-[11px] font-bold text-gray-600 block mb-1">Nominal Setoran (Rp)</label>
+                                <input type="number" name="amount" value="{{ min($remaining, max(10000, $perMonth)) }}" min="10000" max="{{ $remaining }}" required class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl font-bold text-gray-900">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-gray-600 block mb-1">Kanal Pembayaran</label>
+                                <select name="payment_method" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl text-gray-800">
+                                    <option value="QRIS Terpadu Buana">QRIS Terpadu Buana</option>
+                                    <option value="VA Bank Syariah Indonesia">VA Bank Syariah (BSI)</option>
+                                    <option value="VA Bank Jateng Syariah">VA Bank Jateng</option>
+                                    <option value="Potong Gaji / Paylater Civitas">Paylater / Potong Gaji Civitas</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" class="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs transition">
+                                    💳 Bayar Cicilan Sekarang
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 @endif
             </div>

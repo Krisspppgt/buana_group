@@ -59,76 +59,159 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         </span>
-        <input type="text" placeholder="Cari layanan" class="w-full bg-gray-50/80 border border-gray-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0D5A47] focus:border-[#0D5A47] transition">
+        <input type="text" id="mobileSearchInput" oninput="filterMobileServices(this.value)" placeholder="Cari layanan (galon, katering, umrah, tiket, pdh...)" class="w-full bg-gray-50/80 border border-gray-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0D5A47] focus:border-[#0D5A47] transition">
+    </div>
+
+    {{-- Mobile Hero Welcome Card --}}
+    <div class="mt-4 bg-gradient-to-br from-[#144b3c] to-[#0D5A47] rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="relative z-10 flex items-center justify-between gap-3">
+            <div>
+                <span id="mobileHeroBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 text-[10px] font-bold border border-emerald-400/30">
+                    🎓 Tarif Khusus Civitas Aktif
+                </span>
+                <h2 class="text-sm font-extrabold mt-1.5 leading-snug">
+                    Halo, {{ auth()->user()->name ?? 'Civitas UNWAHAS' }}!
+                </h2>
+                <p id="mobileHeroDesc" class="text-[11px] text-emerald-100/90 mt-0.5 leading-relaxed">
+                    Satu pintu layanan logistik kampus, katering, tour & konveksi resmi PT Buana Sejahtera.
+                </p>
+            </div>
+            @if (auth()->user()?->isAdmin())
+                <a href="/admin" class="shrink-0 px-3 py-2 bg-amber-400 text-amber-950 font-extrabold text-[11px] rounded-xl shadow-xs">
+                    📊 Admin
+                </a>
+            @endif
+        </div>
     </div>
 
     {{-- 5 Unit Bisnis Grid (Horizontal Icon Row Sesuai Mockup) --}}
-    <div class="mt-6 grid grid-cols-5 gap-2 text-center">
-        <a href="{{ route('water.index') }}" class="group flex flex-col items-center">
-            <div class="w-13 h-13 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 transition shadow-2xs">
+    <div class="mt-5 grid grid-cols-5 gap-2 text-center" id="mobileUnitsGrid">
+        <a href="{{ route('water.index') }}" data-keywords="air mineral galon botol gelas unwahas" class="mobile-searchable group flex flex-col items-center">
+            <div class="w-13 h-13 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 active:scale-95 transition shadow-2xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 3h6m-5 0v3a2 2 0 01-1 1.732V19a2 2 0 002 2h2a2 2 0 002-2V7.732A2 2 0 0114 6V3m-4 8h4" />
                 </svg>
             </div>
-            <span class="mt-2 text-[11px] font-medium text-gray-700 leading-tight">Air Mineral</span>
+            <span class="mt-2 text-[11px] font-semibold text-gray-700 leading-tight">Air Mineral</span>
         </a>
 
-        <a href="{{ route('food.index') }}" class="group flex flex-col items-center">
-            <div class="w-13 h-13 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 transition shadow-2xs">
+        <a href="{{ route('food.index') }}" data-keywords="katering food snack box nasi kotak prasmanan rapat" class="mobile-searchable group flex flex-col items-center">
+            <div class="w-13 h-13 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 active:scale-95 transition shadow-2xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m-8 10a8 8 0 0116 0H4zm-1 3h18" />
                 </svg>
             </div>
-            <span class="mt-2 text-[11px] font-medium text-gray-700 leading-tight">Katering</span>
+            <span class="mt-2 text-[11px] font-semibold text-gray-700 leading-tight">Katering</span>
         </a>
 
-        <a href="{{ route('tour.index') }}" class="group flex flex-col items-center">
-            <div class="w-13 h-13 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 transition shadow-2xs">
+        <a href="{{ route('tour.index') }}" data-keywords="wisata tour travel umrah ziarah wali study kkl" class="mobile-searchable group flex flex-col items-center">
+            <div class="w-13 h-13 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 active:scale-95 transition shadow-2xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M3 17h18M18 7a2 2 0 110-4 2 2 0 010 4z" />
                 </svg>
             </div>
-            <span class="mt-2 text-[11px] font-medium text-gray-700 leading-tight">Wisata</span>
+            <span class="mt-2 text-[11px] font-semibold text-gray-700 leading-tight">Wisata</span>
         </a>
 
-        <a href="{{ route('ticketing.index') }}" class="group flex flex-col items-center">
-            <div class="w-13 h-13 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 transition shadow-2xs">
+        <a href="{{ route('ticketing.index') }}" data-keywords="tiket kereta pesawat bus kapal seminar event boarding" class="mobile-searchable group flex flex-col items-center">
+            <div class="w-13 h-13 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 active:scale-95 transition shadow-2xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 010 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 010-4V7a2 2 0 00-2-2H5z" />
                 </svg>
             </div>
-            <span class="mt-2 text-[11px] font-medium text-gray-700 leading-tight">Tiket</span>
+            <span class="mt-2 text-[11px] font-semibold text-gray-700 leading-tight">Tiket</span>
         </a>
 
-        <a href="{{ route('konveksi.index') }}" class="group flex flex-col items-center">
-            <div class="w-13 h-13 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 transition shadow-2xs">
+        <a href="{{ route('konveksi.index') }}" data-keywords="konveksi jas almamater pdh pdl kaos jaket kuotasi" class="mobile-searchable group flex flex-col items-center">
+            <div class="w-13 h-13 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-[#0D5A47] group-hover:scale-105 active:scale-95 transition shadow-2xs">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6l4-2 4 3 4-3 4 2v4l-3 1v9H7v-9L4 10V6z" />
                 </svg>
             </div>
-            <span class="mt-2 text-[11px] font-medium text-gray-700 leading-tight">Konveksi</span>
+            <span class="mt-2 text-[11px] font-semibold text-gray-700 leading-tight">Konveksi</span>
         </a>
     </div>
 
-    {{-- Section "Pesan lagi" Sesuai Mockup --}}
-    <div class="mt-8">
-        <h2 class="text-sm font-bold text-gray-900 mb-3">Pesan lagi</h2>
+    {{-- Section "Pesan lagi & Layanan Populer" Sesuai Mockup --}}
+    <div class="mt-7">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-gray-900">Pesan lagi</h2>
+            <span class="text-[11px] font-semibold text-[#0D5A47]">Terlaris di Kampus</span>
+        </div>
         
-        <a href="{{ route('order.campus.rincian') }}" class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)] hover:border-emerald-200 transition group">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/paket_rapat_fakultas.jpg') }}" alt="Paket Rapat Fakultas" class="w-14 h-14 rounded-xl object-cover border border-gray-100">
-                <div>
-                    <h3 class="text-xs font-bold text-gray-900 group-hover:text-[#0D5A47] transition">Paket Rapat Fakultas</h3>
-                    <p class="text-[11px] text-gray-500 mt-0.5">Mulai Rp15.000 / orang</p>
+        <div class="space-y-2.5">
+            <a href="{{ route('order.campus.rincian') }}" data-keywords="paket rapat fakultas snack box air mineral katering" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] hover:border-emerald-200 transition group">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('images/paket_rapat_fakultas.jpg') }}" alt="Paket Rapat Fakultas" class="w-14 h-14 rounded-xl object-cover border border-gray-100">
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h3 class="text-xs font-bold text-gray-900 group-hover:text-[#0D5A47] transition">Paket Rapat Fakultas</h3>
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 text-[#0D5A47] rounded-md">TOP 30 Hari</span>
+                        </div>
+                        <p id="mobilePriceRapat" class="text-[11px] text-gray-500 mt-0.5">Mulai Rp15.000 / orang</p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="text-gray-400 group-hover:text-[#0D5A47] transition pr-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-            </div>
-        </a>
+                <div class="text-gray-400 group-hover:text-[#0D5A47] transition pr-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </a>
+
+            <a href="{{ route('water.index') }}" data-keywords="galon air mineral unwahas 19l botol dus langganan" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] hover:border-emerald-200 transition group">
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shrink-0">💧</div>
+                    <div>
+                        <h3 class="text-xs font-bold text-gray-900 group-hover:text-[#0D5A47] transition">Galon Air Mineral Unwahas 19L</h3>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Langganan Rutin &bull; Bebas Ongkir Kampus</p>
+                    </div>
+                </div>
+                <div class="text-gray-400 group-hover:text-[#0D5A47] transition pr-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </a>
+
+            <a href="{{ route('konveksi.index') }}" data-keywords="jas almamater pdh bem ormawa konveksi kuotasi" class="mobile-searchable flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] hover:border-emerald-200 transition group">
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center text-2xl shrink-0">👕</div>
+                    <div>
+                        <h3 class="text-xs font-bold text-gray-900 group-hover:text-[#0D5A47] transition">Kuotasi PDH & Jas Almamater</h3>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Estimasi Harga Otomatis &bull; Live Tracking Jahit</p>
+                    </div>
+                </div>
+                <div class="text-gray-400 group-hover:text-[#0D5A47] transition pr-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {{-- Section Pintasan Riwayat & Pelacakan --}}
+    <div class="mt-6 pt-5 border-t border-gray-100">
+        <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Pelacakan & Riwayat Transaksi</h2>
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+            <a href="{{ route('water.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
+                <span>🚚</span>
+                <span>Lacak Air Mineral</span>
+            </a>
+            <a href="{{ route('food.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
+                <span>🍱</span>
+                <span>Riwayat Katering</span>
+            </a>
+            <a href="{{ route('tour.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
+                <span>🕋</span>
+                <span>Cicilan Tour/Umrah</span>
+            </a>
+            <a href="{{ route('ticketing.history') }}" class="p-3 rounded-2xl bg-slate-50 border border-gray-200/80 flex items-center gap-2.5 font-semibold text-gray-700 hover:border-emerald-300">
+                <span>🎫</span>
+                <span>E-Boarding Pass</span>
+            </a>
+        </div>
     </div>
 </div>
 
@@ -407,13 +490,30 @@
 function switchMobileTab(type) {
     const container = document.getElementById('campus-toggle-mobile');
     const buttons = container.querySelectorAll('button');
+    const badge = document.getElementById('mobileHeroBadge');
+    const priceLabel = document.getElementById('mobilePriceRapat');
+
     if (type === 'unwahas') {
         buttons[0].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-semibold bg-[#0D5A47] text-white shadow-xs text-center transition";
         buttons[1].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-medium text-gray-600 hover:text-gray-900 text-center transition";
+        if (badge) badge.innerText = "🎓 Tarif Khusus Civitas Aktif";
+        if (priceLabel) priceLabel.innerText = "Mulai Rp15.000 / orang (Harga Civitas)";
     } else {
         buttons[1].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-semibold bg-[#0D5A47] text-white shadow-xs text-center transition";
         buttons[0].className = "flex-1 py-1.5 px-4 rounded-full text-xs font-medium text-gray-600 hover:text-gray-900 text-center transition";
+        if (badge) badge.innerText = "🌐 Katalog Pasar Umum";
+        if (priceLabel) priceLabel.innerText = "Mulai Rp18.000 / orang (Harga Umum)";
     }
+}
+
+// Live Filter Search Mobile
+function filterMobileServices(query) {
+    const q = (query || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.mobile-searchable');
+    items.forEach(el => {
+        const kw = (el.getAttribute('data-keywords') || '') + ' ' + el.innerText.toLowerCase();
+        el.style.display = (q === '' || kw.includes(q)) ? '' : 'none';
+    });
 }
 
 // Interactive Desktop Stepper & Total Calculation

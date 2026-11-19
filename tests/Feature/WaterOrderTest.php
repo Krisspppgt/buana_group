@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
 use App\Enums\Role;
 use App\Enums\Unit;
 use App\Models\Order;
@@ -115,5 +116,37 @@ class WaterOrderTest extends TestCase
         $response->assertSee('Pelacakan Logistik Armada');
         $response->assertSee('Armada Sedang Mengantar');
         $response->assertSee('Pak Bambang Susanto');
+    }
+
+    public function test_courier_and_customer_can_update_water_delivery_status(): void
+    {
+        $courier = User::factory()->create([
+            'role' => Role::Courier,
+            'phone' => '084412345678',
+        ]);
+
+        $order = Order::create([
+            'code' => Order::newCode(),
+            'user_id' => $this->user->id,
+            'unit' => Unit::Air,
+            'subtotal' => 18000,
+            'ship_fee' => 0,
+            'total' => 18000,
+            'ship_name' => 'Budi',
+            'ship_phone' => '087712345678',
+            'ship_addr' => 'Gedung A',
+        ]);
+
+        $this->actingAs($courier)
+            ->post(route('water.status.update', $order->code), ['status' => 3])
+            ->assertRedirect();
+
+        $this->assertEquals(OrderStatus::Shipped, $order->fresh()->status);
+
+        $this->actingAs($this->user)
+            ->post(route('water.status.update', $order->code), ['status' => 4])
+            ->assertRedirect();
+
+        $this->assertEquals(OrderStatus::Done, $order->fresh()->status);
     }
 }

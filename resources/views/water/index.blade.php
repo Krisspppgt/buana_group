@@ -2,17 +2,24 @@
 @section('title', 'Pemesanan Air Mineral Unwahas - Buana Group')
 
 @section('content')
-<div style="margin-bottom: 16px;">
-    <a href="{{ route('home') }}" style="color:var(--muted); text-decoration:none; font-size:0.88rem; display:inline-flex; align-items:center; gap:4px;">
-        &larr; Kembali ke Beranda
-    </a>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-        <h1 style="margin:0; font-size:1.25rem;">💧 Air Mineral Unwahas</h1>
-        <a href="{{ route('water.history') }}" style="color:var(--brand); text-decoration:none; font-size:0.85rem; font-weight:600;">
-            Riwayat Pesanan
+<div class="bg-gradient-to-r from-teal-900 via-emerald-800 to-cyan-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-teal-200 font-semibold mb-2">
+                <a href="{{ route('home') }}" class="hover:text-white">&larr; Beranda</a>
+                <span>&bull;</span>
+                <span class="uppercase tracking-wider">Unit 1 &bull; Logistik Air Minum</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">💧 Air Mineral Unwahas</h1>
+            <p class="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
+                Pesan galon 19L, botol, dan gelas higienis untuk kebutuhan kantor, fakultas, acara seminar, maupun langganan rutin rumah tangga.
+            </p>
+        </div>
+        <a href="{{ route('water.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
+            📋 Riwayat & Lacak Armada
         </a>
     </div>
-    <p class="sub" style="margin-top:2px;">Pesan galon, botol, dan gelas untuk kebutuhan kantor, kampus, & rumah tangga.</p>
 </div>
 
 @if ($user->isCivitas())
@@ -33,9 +40,10 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('water.store') }}" id="orderForm">
+<form method="POST" action="{{ route('water.store') }}" id="orderForm" class="unit-grid-2col">
     @csrf
 
+    <div>
     {{-- 1. PILIH TIPE PESANAN --}}
     <div class="card" style="margin-bottom: 16px; padding: 16px;">
         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color:#0f172a;">
@@ -177,7 +185,10 @@
             </div>
         @endforeach
     </div>
+    </div>
 
+    {{-- KOLOM KANAN (STICKY DESKTOP): LOKASI & RINGKASAN --}}
+    <div class="unit-sticky-col">
     {{-- 3. ALAMAT PENGIRIMAN --}}
     <div class="card" style="margin-bottom: 20px;">
         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; color:#0f172a;">
@@ -215,6 +226,7 @@
         <button type="submit" id="btn_submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 1rem;">
             🚀 Konfirmasi & Pesan Sekarang
         </button>
+    </div>
     </div>
 </form>
 

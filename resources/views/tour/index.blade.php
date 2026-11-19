@@ -2,17 +2,24 @@
 @section('title', 'Buana Tour & Travel - Wisata, Ziarah & Umrah')
 
 @section('content')
-<div style="margin-bottom: 16px;">
-    <a href="{{ route('home') }}" style="color:var(--muted); text-decoration:none; font-size:0.88rem; display:inline-flex; align-items:center; gap:4px;">
-        &larr; Kembali ke Beranda
-    </a>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-        <h1 style="margin:0; font-size:1.25rem;">✈️ Buana Tour & Travel</h1>
-        <a href="{{ route('tour.history') }}" style="color:var(--brand); text-decoration:none; font-size:0.85rem; font-weight:600;">
-            Riwayat Booking
+<div class="bg-gradient-to-r from-emerald-900 via-teal-800 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-emerald-200 font-semibold mb-2">
+                <a href="{{ route('home') }}" class="hover:text-white">&larr; Beranda</a>
+                <span>&bull;</span>
+                <span class="uppercase tracking-wider">Unit 3 &bull; Perjalanan & Ziarah</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">✈️ Buana Tour & Travel</h1>
+            <p class="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
+                Etalase paket wisata, study tour KKL fakultas, ziarah wali, serta program tabungan & skema cicilan Umrah civitas UNWAHAS.
+            </p>
+        </div>
+        <a href="{{ route('tour.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
+            📋 Riwayat Booking & Cicilan
         </a>
     </div>
-    <p class="sub" style="margin-top:2px;">Etalase paket wisata, study tour, ziarah wali, tabungan & cicilan Umrah.</p>
 </div>
 
 @if ($user->isCivitas())
@@ -42,7 +49,7 @@
 </div>
 
 {{-- DAFTAR PAKET PERJALANAN --}}
-<div style="display: flex; flex-direction: column; gap: 14px;">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     @foreach ($packages as $pkg)
         @php
             $userPrice = $pkg->priceFor($user);

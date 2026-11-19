@@ -3,7 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FoodServiceController;
 use App\Http\Controllers\KonveksiController;
-use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\TicketingController;
 use App\Http\Controllers\TourTravelController;
 use App\Http\Controllers\WaterOrderController;
@@ -18,13 +18,6 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister']);
     Route::post('/daftar', [AuthController::class, 'register'])->middleware('throttle:6,1');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
-
-    // Lupa Kata Sandi + OTP (WhatsApp & Gmail)
-    Route::get('/lupa-sandi', [PasswordResetController::class, 'showRequestForm'])->name('password.request');
-    Route::post('/lupa-sandi', [PasswordResetController::class, 'sendOtp'])->name('password.otp.send')->middleware('throttle:6,1');
-    Route::get('/lupa-sandi/verifikasi', [PasswordResetController::class, 'showVerifyForm'])->name('password.verify');
-    Route::post('/lupa-sandi/kirim-ulang', [PasswordResetController::class, 'resendOtp'])->name('password.otp.resend')->middleware('throttle:6,1');
-    Route::post('/lupa-sandi/reset', [PasswordResetController::class, 'resetPassword'])->name('password.reset')->middleware('throttle:6,1');
 });
 
 // Demo / Preview Mockup Slide 8 (Dapat diakses langsung)
@@ -80,6 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [WaterOrderController::class, 'store'])->name('store');
         Route::get('/riwayat', [WaterOrderController::class, 'history'])->name('history');
         Route::get('/lacak/{code}', [WaterOrderController::class, 'show'])->name('show');
+        Route::post('/lacak/{code}/status', [WaterOrderController::class, 'updateStatus'])->name('status.update');
     });
 
     // Modul Unit 2: Buana Food Services
@@ -88,6 +82,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [FoodServiceController::class, 'store'])->name('store');
         Route::get('/riwayat', [FoodServiceController::class, 'history'])->name('history');
         Route::get('/pesanan/{code}', [FoodServiceController::class, 'show'])->name('show');
+        Route::post('/pesanan/{code}/status', [FoodServiceController::class, 'updateStatus'])->name('status.update');
     });
 
     // Modul Unit 3: Buana Tour & Travel
@@ -96,6 +91,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/paket/{id}', [TourTravelController::class, 'showPackage'])->name('package.show');
         Route::post('/booking', [TourTravelController::class, 'storeBooking'])->name('bookings.store');
         Route::get('/booking/{code}', [TourTravelController::class, 'showBooking'])->name('bookings.show');
+        Route::post('/booking/{code}/cicilan', [TourTravelController::class, 'payInstallment'])->name('bookings.pay');
         Route::get('/riwayat', [TourTravelController::class, 'history'])->name('history');
     });
 
@@ -115,6 +111,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/kuotasi', [KonveksiController::class, 'storeQuote'])->name('quotes.store');
         Route::get('/kuotasi', [KonveksiController::class, 'quotes'])->name('quotes');
         Route::get('/kuotasi/{id}', [KonveksiController::class, 'showQuote'])->name('quotes.show');
+        Route::post('/kuotasi/{id}/setujui', [KonveksiController::class, 'approveQuote'])->name('quotes.approve');
         Route::get('/tracking/{code}', [KonveksiController::class, 'tracking'])->name('tracking');
+        Route::post('/tracking/{code}/stage', [KonveksiController::class, 'updateStage'])->name('tracking.stage');
     });
+
+    // Fitur Pendukung Ekosistem: Payment Gateway Terpadu & Buana Loyalty Points
+    Route::get('/pembayaran/{code}', [PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('/pembayaran/{code}', [PaymentController::class, 'process'])->name('payment.process');
+    Route::get('/loyalty-points', [PaymentController::class, 'loyaltyIndex'])->name('loyalty.index');
 });

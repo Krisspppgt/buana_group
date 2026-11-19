@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Unit;
 use App\Models\Event;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
@@ -82,13 +83,44 @@ class TicketingController extends Controller
             ],
         ];
 
+        // Filter & Pencarian Agregator Transportasi
+        $selectedMode = (string) $request->query('mode', '');
+        $searchQuery = trim((string) $request->query('q', ''));
+        $travelDate = (string) $request->query('date', '');
+
+        if ($travelDate !== '') {
+            $formattedDate = date('d M Y', strtotime($travelDate));
+            $transportRoutes = array_map(function (array $route) use ($formattedDate): array {
+                $route['date'] = $formattedDate;
+
+                return $route;
+            }, $transportRoutes);
+        }
+
+        if ($selectedMode !== '' && $selectedMode !== 'all') {
+            $transportRoutes = array_values(array_filter(
+                $transportRoutes,
+                fn (array $route): bool => $route['mode'] === $selectedMode
+            ));
+        }
+
+        if ($searchQuery !== '') {
+            $needle = strtolower($searchQuery);
+            $transportRoutes = array_values(array_filter(
+                $transportRoutes,
+                fn (array $route): bool => str_contains(strtolower($route['title']), $needle)
+                    || str_contains(strtolower($route['route']), $needle)
+                    || str_contains(strtolower($route['mode_name']), $needle)
+            ));
+        }
+
         // Tiket Event Internal / Eksternal Yayasan Wahid Hasyim
         $events = Event::where('is_active', true)
             ->where('event_date', '>=', now())
             ->orderBy('event_date')
             ->get();
 
-        return view('ticketing.index', compact('transportRoutes', 'events', 'user'));
+        return view('ticketing.index', compact('transportRoutes', 'events', 'user', 'selectedMode', 'searchQuery', 'travelDate'));
     }
 
     /**
@@ -124,8 +156,15 @@ class TicketingController extends Controller
             'status' => 0, // Aktif
         ]);
 
+        $earnedPoints = $user->earnLoyaltyPoints(
+            (int) $data['price'],
+            Unit::Ticketing,
+            $ticket->code,
+            "Tiket Transportasi {$ticket->title} #{$ticket->code}"
+        );
+
         return redirect()->route('ticketing.show', $ticket->code)
-            ->with('success', 'Tiket transportasi berhasil diterbitkan! E-Boarding Pass siap digunakan.');
+            ->with('success', "Tiket transportasi berhasil diterbitkan! E-Boarding Pass siap digunakan (+{$earnedPoints} Buana Points).");
     }
 
     /**
@@ -163,8 +202,15 @@ class TicketingController extends Controller
 
         $event->increment('booked');
 
+        $earnedPoints = $user->earnLoyaltyPoints(
+            (int) $price,
+            Unit::Ticketing,
+            $ticket->code,
+            "Tiket Event {$event->title} #{$ticket->code}"
+        );
+
         return redirect()->route('ticketing.show', $ticket->code)
-            ->with('success', 'Tiket acara berhasil dipesan! Tunjukkan E-Ticket QR Code saat masuk venue.');
+            ->with('success', "Tiket acara berhasil dipesan! Tunjukkan E-Ticket QR Code saat masuk venue (+{$earnedPoints} Buana Points).");
     }
 
     /**

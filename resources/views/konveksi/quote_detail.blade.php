@@ -40,6 +40,25 @@
                 Lihat Progres Produksi Transparan &rarr;
             </a>
         </div>
+    @else
+        <div style="margin-top: 14px; padding: 14px; background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 12px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #9d174d; margin-bottom: 4px;">
+                🚀 Setujui Estimasi Harga & Lanjutkan ke Produksi
+            </div>
+            <div style="font-size: 0.78rem; color: #831843; margin-bottom: 10px;">
+                Setujui kuotasi ini untuk langsung menerbitkan Order Produksi dan memantau progres jahit secara <i>real-time</i>.
+            </div>
+            <form method="POST" action="{{ route('konveksi.quotes.approve', $quote->id) }}" style="display: flex; flex-direction: column; gap: 8px;">
+                @csrf
+                <div>
+                    <label style="margin: 0 0 4px; font-size: 0.78rem; color: #831843;">Alamat Pengiriman / Gedung Fakultas Tujuan</label>
+                    <input type="text" name="ship_addr" value="Kampus UNWAHAS Jl. Menoreh Tengah X No. 22, Semarang" required style="padding: 8px 12px; font-size: 0.85rem;">
+                </div>
+                <button type="submit" class="btn" style="background: #db2777; align-self: flex-start; padding: 8px 16px; font-size: 0.84rem;">
+                    ✅ Setujui Harga & Mulai Produksi Sekarang
+                </button>
+            </form>
+        </div>
     @endif
 </div>
 
