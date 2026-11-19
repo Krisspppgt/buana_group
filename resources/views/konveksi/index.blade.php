@@ -2,7 +2,7 @@
 @section('title', 'Buana Konveksi - Jas Almamater, PDH & Kaos')
 
 @section('content')
-<div class="bg-gradient-to-r from-pink-900 via-rose-800 to-purple-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+<div class="bg-gradient-to-r from-pink-900 via-rose-800 to-purple-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
     <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -11,20 +11,19 @@
                 <span>&bull;</span>
                 <span class="uppercase tracking-wider">Unit 5 &bull; Produksi Garmen & Seragam</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">👕 Buana Konveksi</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Buana Konveksi</h1>
             <p class="text-xs sm:text-sm text-pink-100 mt-1 max-w-xl">
                 Katalog bahan kain pilihan, portofolio jas almamater & PDH/PDL, kalkulasi kuotasi otomatis, dan pelacakan progres jahit transparan.
             </p>
         </div>
         <a href="{{ route('konveksi.quotes') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            📋 Riwayat Kuotasi & Tracking
+            Riwayat Kuotasi
         </a>
     </div>
 </div>
 
 @if ($user->isCivitas())
     <div class="eco-banner" style="margin-bottom: 16px;">
-        <span style="font-size: 1.25rem;">🎓</span>
         <div>
             <b>Diskon Civitas Unwahas Aktif</b>
             <div style="font-size: 0.8rem; opacity: 0.9;">Potongan harga khusus pemesanan seragam ormawa, BEM, fakultas & angkatan.</div>
@@ -45,7 +44,7 @@
 {{-- 1. KATALOG BAHAN KAIN & WARNA --}}
 <div class="card" style="margin-bottom: 18px; padding: 16px;">
     <div style="font-weight: 700; font-size: 0.95rem; color:#0f172a; margin-bottom: 10px;">
-        🧵 Pilihan Bahan Kain Terbaik
+        Pilihan Bahan Kain Terbaik
     </div>
     <div style="display: flex; flex-direction: column; gap: 8px;">
         @foreach ($fabrics as $f)
@@ -65,7 +64,7 @@
     {{-- Palet Warna --}}
     <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
         <div style="font-weight: 700; font-size: 0.85rem; color:#334155; margin-bottom: 8px;">
-            🎨 Palet Warna Populer:
+            Palet Warna Populer:
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
             @foreach ($colors as $c)
@@ -81,7 +80,7 @@
 {{-- 2. PORTOFOLIO PRODUK --}}
 <div class="card" style="margin-bottom: 18px; padding: 16px;">
     <div style="font-weight: 700; font-size: 0.95rem; color:#0f172a; margin-bottom: 10px;">
-        🧥 Portofolio Produk Konveksi
+        Portofolio Produk Konveksi
     </div>
     <div style="display: flex; flex-direction: column; gap: 8px;">
         @foreach ($portfolio as $item)
@@ -105,7 +104,7 @@
 
     <div class="card" style="margin-bottom: 20px; border-top: 3px solid #0f766e; padding: 18px;">
         <div style="font-weight: 700; font-size: 1rem; color:#0f172a; margin-bottom: 4px;">
-            📝 Formulir Kuotasi & Upload Desain Mockup
+            Formulir Kuotasi & Upload Desain Mockup
         </div>
         <p style="font-size:0.82rem; color:var(--muted); margin:0 0 14px;">
             Dapatkan estimasi harga otomatis instan dan konsultasi pengerjaan dari tim produksi.
@@ -181,8 +180,8 @@
             </div>
         </div>
 
-        <button type="submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 1rem;">
-            🚀 Ajukan Kuotasi & Cek Penawaran
+        <button type="submit" class="btn" style="margin-top: 14px; padding: 14px; font-size: 0.95rem;">
+            Ajukan Kuotasi & Cek Penawaran
         </button>
     </div>
 </form>

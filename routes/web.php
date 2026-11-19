@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FoodServiceController;
 use App\Http\Controllers\KonveksiController;
@@ -128,4 +129,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/pembayaran/{code}', [PaymentController::class, 'checkout'])->name('payment.checkout');
     Route::post('/pembayaran/{code}', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/loyalty-points', [PaymentController::class, 'loyaltyIndex'])->name('loyalty.index');
+
+    // Profil Akun & Buku Alamat Pengiriman
+    Route::prefix('akun')->name('account.')->group(function () {
+        Route::get('/', [AccountController::class, 'index'])->name('index');
+        Route::put('/profil', [AccountController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/alamat', [AccountController::class, 'storeAddress'])->name('addresses.store');
+        Route::post('/alamat/{address}/utama', [AccountController::class, 'setMainAddress'])->name('addresses.main');
+        Route::delete('/alamat/{address}', [AccountController::class, 'deleteAddress'])->name('addresses.destroy');
+    });
 });

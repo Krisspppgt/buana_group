@@ -13,18 +13,18 @@
                 <span>&rsaquo;</span>
                 <span class="font-bold text-gray-800">Payment Gateway Terpadu</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900">💳 Checkout & Payment Gateway Terpadu</h1>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900">Checkout & Payment Gateway Terpadu</h1>
         </div>
 
-        <a href="{{ route('loyalty.index') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-extrabold shadow-2xs hover:bg-amber-100 transition">
-            <span>🪙</span>
+        <a href="{{ route('loyalty.index') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs hover:bg-amber-100 transition">
+            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>Saldo Poin: {{ number_format($user->loyalty_points, 0, ',', '.') }} Poin</span>
         </a>
     </div>
 
     @if (session('success'))
         <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 text-sm font-semibold">
-            <span class="text-xl">✅</span>
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <div>{{ session('success') }}</div>
         </div>
     @endif
@@ -39,16 +39,14 @@
 
     @if (session('info'))
         <div class="p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-2xl flex items-center gap-3 text-sm font-semibold">
-            <span class="text-xl">ℹ️</span>
+            <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <div>{{ session('info') }}</div>
         </div>
     @endif
 
     @if (! $midtransConfigured)
         <div class="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl text-xs space-y-1">
-            <div class="font-extrabold flex items-center gap-1.5">
-                <span>⚙️ Midtrans Sandbox Belum Dikonfigurasi</span>
-            </div>
+            <div class="font-bold">Midtrans Sandbox Belum Dikonfigurasi</div>
             <p class="leading-relaxed">
                 Untuk mencoba popup pembayaran Midtrans (QRIS, Virtual Account, GoPay), daftar gratis di <b>dashboard.sandbox.midtrans.com</b> lalu masukkan <code>MIDTRANS_SERVER_KEY</code> dan <code>MIDTRANS_CLIENT_KEY</code> ke file <code>.env</code>. Metode <b>Paylater Civitas / Tempo B2B</b> tetap dapat digunakan langsung.
             </p>
@@ -56,41 +54,41 @@
     @endif
 
     @if (session('snap_token'))
-        <div class="p-5 bg-gradient-to-r from-indigo-900 to-blue-900 text-white rounded-3xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="p-5 bg-gradient-to-r from-indigo-900 to-blue-900 text-white rounded-2xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-blue-100 text-[11px] font-bold">
-                    ⏳ Menunggu Pembayaran Midtrans {{ $midtransIsProduction ? 'Production' : 'Sandbox' }}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/15 text-blue-100 text-[11px] font-bold">
+                    Menunggu Pembayaran Midtrans {{ $midtransIsProduction ? 'Production' : 'Sandbox' }}
                 </span>
                 <h2 class="text-base font-extrabold">Selesaikan Pembayaran Anda</h2>
                 <p class="text-xs text-blue-100">Jika jendela popup Midtrans belum terbuka, klik tombol di samping.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button type="button" onclick="openMidtransSnap()" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-extrabold text-xs rounded-xl shadow-sm cursor-pointer">
-                    🚀 Buka Popup Midtrans
+                <button type="button" onclick="openMidtransSnap()" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs rounded-xl shadow-sm cursor-pointer">
+                    Buka Popup Midtrans
                 </button>
                 <a href="{{ route('payment.checkout', $order->code) }}" class="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl">
-                    🔄 Cek Status
+                    Cek Status
                 </a>
             </div>
         </div>
     @elseif ($latestPayment && $latestPayment->status === \App\Enums\PaymentStatus::Pending)
         <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
             <div>
-                <span class="font-extrabold block">⏳ Transaksi Menunggu Pembayaran ({{ $latestPayment->ref }})</span>
+                <span class="font-bold block">Transaksi Menunggu Pembayaran ({{ $latestPayment->ref }})</span>
                 <span>Silakan selesaikan pembayaran di aplikasi bank/e-wallet atau tekan tombol Cek Status setelah membayar.</span>
             </div>
             <a href="{{ route('payment.checkout', $order->code) }}" class="px-3.5 py-2 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700">
-                🔄 Cek Status Pembayaran
+                Cek Status Pembayaran
             </a>
         </div>
     @endif
 
     {{-- Status Pembayaran Jika Sudah Dibayar --}}
     @if ($latestPayment && $latestPayment->status === \App\Enums\PaymentStatus::Success)
-        <div class="bg-gradient-to-r from-emerald-900 to-teal-800 text-white rounded-3xl p-6 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="bg-gradient-to-r from-emerald-900 to-teal-800 text-white rounded-2xl p-6 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/30 text-emerald-200 text-xs font-extrabold">
-                    ✅ LUNAS TERVERIFIKASI GATEWAY
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/30 text-emerald-200 text-xs font-bold">
+                    LUNAS TERVERIFIKASI GATEWAY
                 </span>
                 <h2 class="text-lg font-extrabold">Ref Transaksi: {{ $latestPayment->ref }}</h2>
                 <p class="text-xs text-emerald-100">
@@ -98,7 +96,7 @@
                 </p>
                 @if ($order->points_earned > 0)
                     <p class="text-xs text-amber-300 font-bold pt-1">
-                        🪙 +{{ number_format($order->points_earned, 0, ',', '.') }} Buana Loyalty Points telah ditambahkan ke akun Anda!
+                        +{{ number_format($order->points_earned, 0, ',', '.') }} Buana Loyalty Points telah ditambahkan ke akun Anda.
                     </p>
                 @endif
             </div>
@@ -127,8 +125,8 @@
                         <div class="flex items-center gap-3">
                             <input type="radio" name="method" value="qris" checked onchange="selectGatewayMethod('qris')" class="w-4 h-4 text-[#0D5A47]">
                             <div>
-                                <div class="text-xs font-extrabold text-gray-900 flex items-center gap-2">
-                                    <span>📱 QRIS Terpadu Buana Group</span>
+                                <div class="text-xs font-bold text-gray-900 flex items-center gap-2">
+                                    <span>QRIS Terpadu Buana Group</span>
                                     <span class="px-2 py-0.5 text-[10px] bg-emerald-100 text-[#0D5A47] rounded-full font-bold">Rekomendasi</span>
                                 </div>
                                 <div class="text-[11px] text-gray-500">Scan via Mobile Banking, GoPay, OVO, DANA, ShopeePay, LinkAja</div>
@@ -146,45 +144,45 @@
                             <div class="flex items-center gap-3">
                                 <input type="radio" name="method" value="va_bsi" onchange="selectGatewayMethod('va_bsi')" class="w-4 h-4 text-[#0D5A47]">
                                 <div>
-                                    <div class="text-xs font-bold text-gray-900">🏦 Bank Syariah Indonesia (BSI VA)</div>
+                                    <div class="text-xs font-bold text-gray-900">Bank Syariah Indonesia (BSI VA)</div>
                                     <div class="text-[11px] text-gray-500">Verifikasi otomatis 24 jam tanpa unggah bukti transfer</div>
                                 </div>
                             </div>
-                            <span class="text-[11px] font-extrabold text-teal-700">BSI</span>
+                            <span class="text-[11px] font-bold text-teal-700">BSI</span>
                         </label>
 
                         <label class="flex items-center justify-between p-3.5 rounded-2xl border border-gray-200 hover:border-emerald-500 cursor-pointer transition">
                             <div class="flex items-center gap-3">
                                 <input type="radio" name="method" value="va_jateng" onchange="selectGatewayMethod('va_jateng')" class="w-4 h-4 text-[#0D5A47]">
                                 <div>
-                                    <div class="text-xs font-bold text-gray-900">🏦 Bank Jateng / Syariah VA</div>
+                                    <div class="text-xs font-bold text-gray-900">Bank Jateng / Syariah VA</div>
                                     <div class="text-[11px] text-gray-500">Mitra perbankan resmi lingkungan kampus Semarang</div>
                                 </div>
                             </div>
-                            <span class="text-[11px] font-extrabold text-blue-700">JATENG</span>
+                            <span class="text-[11px] font-bold text-blue-700">JATENG</span>
                         </label>
 
                         <label class="flex items-center justify-between p-3.5 rounded-2xl border border-gray-200 hover:border-emerald-500 cursor-pointer transition">
                             <div class="flex items-center gap-3">
                                 <input type="radio" name="method" value="va_mandiri" onchange="selectGatewayMethod('va_mandiri')" class="w-4 h-4 text-[#0D5A47]">
                                 <div>
-                                    <div class="text-xs font-bold text-gray-900">🏦 Bank Mandiri Virtual Account</div>
+                                    <div class="text-xs font-bold text-gray-900">Bank Mandiri Virtual Account</div>
                                     <div class="text-[11px] text-gray-500">Livin' by Mandiri & ATM Bersama</div>
                                 </div>
                             </div>
-                            <span class="text-[11px] font-extrabold text-amber-700">MANDIRI</span>
+                            <span class="text-[11px] font-bold text-amber-700">MANDIRI</span>
                         </label>
                     </div>
                 </div>
 
                 {{-- C. E-Wallet --}}
                 <div class="space-y-2">
-                    <div class="text-[11px] font-extrabold uppercase tracking-wider text-gray-400">E-Wallet / Dompet Digital</div>
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">E-Wallet / Dompet Digital</div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <label class="flex items-center gap-3 p-3.5 rounded-2xl border border-gray-200 hover:border-emerald-500 cursor-pointer transition">
                             <input type="radio" name="method" value="gopay" onchange="selectGatewayMethod('gopay')" class="w-4 h-4 text-[#0D5A47]">
                             <div>
-                                <div class="text-xs font-bold text-gray-900">🟢 GoPay</div>
+                                <div class="text-xs font-bold text-gray-900">GoPay</div>
                                 <div class="text-[10px] text-gray-500">Auto-debit aplikasi Gojek</div>
                             </div>
                         </label>
@@ -192,7 +190,7 @@
                         <label class="flex items-center gap-3 p-3.5 rounded-2xl border border-gray-200 hover:border-emerald-500 cursor-pointer transition">
                             <input type="radio" name="method" value="dana" onchange="selectGatewayMethod('dana')" class="w-4 h-4 text-[#0D5A47]">
                             <div>
-                                <div class="text-xs font-bold text-gray-900">🔵 DANA / ShopeePay</div>
+                                <div class="text-xs font-bold text-gray-900">DANA / ShopeePay</div>
                                 <div class="text-[10px] text-gray-500">Saldo dompet digital</div>
                             </div>
                         </label>
@@ -202,7 +200,7 @@
                 {{-- D. Paylater Khusus Mahasiswa/Pegawai & Tempo B2B --}}
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700">🎓 Fasilitas Khusus Civitas UNWAHAS</span>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Fasilitas Khusus Civitas UNWAHAS</span>
                         @if ($user->isCivitas())
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">NIM/NIP Terverifikasi</span>
                         @else
@@ -214,22 +212,22 @@
                         <div class="flex items-center gap-3">
                             <input type="radio" name="method" value="paylater" onchange="selectGatewayMethod('paylater')" {{ $user->isCivitas() ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
                             <div>
-                                <div class="text-xs font-extrabold text-gray-900">🎓 Paylater Civitas Mahasiswa / Pegawai</div>
+                                <div class="text-xs font-bold text-gray-900">Paylater Civitas Mahasiswa / Pegawai</div>
                                 <div class="text-[11px] text-gray-500">Tagihan akhir bulan terintegrasi NIM/NIP ({{ $user->campus_id ?? 'Khusus Civitas' }})</div>
                             </div>
                         </div>
-                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-emerald-100 text-[#0D5A47]">0% Bunga</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-[#0D5A47]">0% Bunga</span>
                     </label>
 
                     <label class="flex items-center justify-between p-3.5 rounded-2xl border {{ $user->isCivitas() ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer hover:border-emerald-600' : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }} transition">
                         <div class="flex items-center gap-3">
                             <input type="radio" name="method" value="tempo_b2b" onchange="selectGatewayMethod('tempo_b2b')" {{ $user->isCivitas() ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
                             <div>
-                                <div class="text-xs font-extrabold text-gray-900">🏢 Invoice Tempo Fakultas / Unit (TOP 30 Hari)</div>
+                                <div class="text-xs font-bold text-gray-900">Invoice Tempo Fakultas / Unit (TOP 30 Hari)</div>
                                 <div class="text-[11px] text-gray-500">Pembayaran kolektif SPK fakultas / biro kampus</div>
                             </div>
                         </div>
-                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800">TOP 30H</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800">TOP 30H</span>
                     </label>
                 </div>
             </div>
@@ -239,7 +237,7 @@
                 <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                     <div>
                         <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">Terminal Payment Gateway Midtrans</span>
-                        <h3 class="text-sm font-extrabold" id="preview_title">QRIS Terpadu PT Buana Sejahtera</h3>
+                        <h3 class="text-sm font-bold" id="preview_title">QRIS Terpadu PT Buana Sejahtera</h3>
                     </div>
                     <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
                         {{ $midtransIsProduction ? 'PRODUCTION' : 'SANDBOX MODE' }}
@@ -247,8 +245,8 @@
                 </div>
 
                 <div class="py-4 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-2xl shrink-0">
-                        🔒
+                    <div class="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     </div>
                     <div class="text-xs space-y-1 text-slate-300">
                         <div id="preview_instruction" class="font-semibold text-white">
@@ -266,19 +264,21 @@
             {{-- FITUR BUANA LOYALTY POINTS (CROSS-SELLING) --}}
             <div class="card border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 to-yellow-50/50 space-y-3">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">🪙</span>
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-amber-200/70 text-amber-800 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
                         <div>
-                            <h3 class="text-xs font-extrabold text-amber-950">Buana Loyalty Points</h3>
+                            <h3 class="text-xs font-bold text-amber-950">Buana Loyalty Points</h3>
                             <p class="text-[11px] text-amber-800">Saldo Anda: <b>{{ number_format($user->loyalty_points, 0, ',', '.') }} Poin</b> (Senilai Rp {{ number_format($user->loyalty_points, 0, ',', '.') }})</p>
                         </div>
                     </div>
-                    <span class="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-950 text-[10px] font-extrabold">Cross-Selling</span>
+                    <span class="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-950 text-[10px] font-bold">Cross-Selling</span>
                 </div>
 
                 @if ($order->points_redeemed > 0)
                     <div class="p-2.5 rounded-xl bg-white/90 border border-amber-200 text-xs text-emerald-800 font-bold">
-                        ✅ Anda telah menukarkan {{ number_format($order->points_redeemed, 0, ',', '.') }} Poin (-Rp {{ number_format($order->points_redeemed, 0, ',', '.') }}) pada pesanan ini.
+                        Anda telah menukarkan {{ number_format($order->points_redeemed, 0, ',', '.') }} Poin (-Rp {{ number_format($order->points_redeemed, 0, ',', '.') }}) pada pesanan ini.
                     </div>
                 @elseif ($maxRedeemablePoints > 0)
                     <label class="flex items-center justify-between p-3 rounded-xl bg-white border border-amber-300 cursor-pointer hover:bg-amber-50/40 transition m-0">
@@ -341,12 +341,12 @@
                 </div>
 
                 <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/70 flex items-center justify-between text-xs text-emerald-900">
-                    <span>🪙 Reward Poin Transaksi Ini:</span>
-                    <span class="font-extrabold text-[#0D5A47]" id="earned_points_display">+{{ number_format($potentialEarnedPoints, 0, ',', '.') }} Poin</span>
+                    <span>Reward Poin Transaksi Ini:</span>
+                    <span class="font-bold text-[#0D5A47]" id="earned_points_display">+{{ number_format($potentialEarnedPoints, 0, ',', '.') }} Poin</span>
                 </div>
 
                 <button type="submit" class="btn" style="padding: 14px; font-size: 0.95rem;">
-                    ✅ Konfirmasi & Bayar Sekarang
+                    Konfirmasi & Bayar Sekarang
                 </button>
             </div>
         </div>

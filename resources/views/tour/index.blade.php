@@ -2,7 +2,7 @@
 @section('title', 'Buana Tour & Travel - Wisata, Ziarah & Umrah')
 
 @section('content')
-<div class="bg-gradient-to-r from-emerald-900 via-teal-800 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
+<div class="bg-gradient-to-r from-emerald-900 via-teal-800 to-emerald-800 rounded-2xl p-6 sm:p-8 text-white shadow-lg mb-6 relative overflow-hidden">
     <div class="absolute -right-8 -bottom-10 w-52 h-52 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -11,20 +11,19 @@
                 <span>&bull;</span>
                 <span class="uppercase tracking-wider">Unit 3 &bull; Perjalanan & Ziarah</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">✈️ Buana Tour & Travel</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Buana Tour & Travel</h1>
             <p class="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
                 Etalase paket wisata, study tour KKL fakultas, ziarah wali, serta program tabungan & skema cicilan Umrah civitas UNWAHAS.
             </p>
         </div>
         <a href="{{ route('tour.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            📋 Riwayat Booking & Cicilan
+            Riwayat Booking & Cicilan
         </a>
     </div>
 </div>
 
 @if ($user->isCivitas())
     <div class="eco-banner" style="margin-bottom: 16px;">
-        <span style="font-size: 1.25rem;">🎓</span>
         <div>
             <b>Tarif Spesial Civitas Yayasan Wahid Hasyim</b>
             <div style="font-size: 0.8rem; opacity: 0.9;">Dapatkan subsidi dan diskon khusus mahasiswa, santri, dosen & alumni.</div>
@@ -38,13 +37,13 @@
         Semua Paket
     </a>
     <a href="{{ route('tour.index', ['category' => 'umrah']) }}" class="tag {{ $category === 'umrah' ? 'tag-highlight' : '' }}" style="text-decoration:none; padding:6px 14px; font-size:0.82rem; border-radius:20px;">
-        🕋 Paket Umrah
+        Paket Umrah
     </a>
     <a href="{{ route('tour.index', ['category' => 'ziarah']) }}" class="tag {{ $category === 'ziarah' ? 'tag-highlight' : '' }}" style="text-decoration:none; padding:6px 14px; font-size:0.82rem; border-radius:20px;">
-        🕌 Ziarah Wali
+        Ziarah Wali
     </a>
     <a href="{{ route('tour.index', ['category' => 'study_tour']) }}" class="tag {{ $category === 'study_tour' ? 'tag-highlight' : '' }}" style="text-decoration:none; padding:6px 14px; font-size:0.82rem; border-radius:20px;">
-        🎓 Study Tour
+        Study Tour
     </a>
 </div>
 
@@ -73,10 +72,10 @@
 
             <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; font-size: 0.78rem;">
                 <div>
-                    📅 Keberangkatan: <b>{{ $pkg->departure_date->format('d M Y') }}</b>
+                    Keberangkatan: <b>{{ $pkg->departure_date->format('d M Y') }}</b>
                 </div>
                 <div>
-                    👥 Kuota: <b>{{ $pkg->booked }}/{{ $pkg->quota }} pax</b>
+                    Kuota: <b>{{ $pkg->booked }}/{{ $pkg->quota }} pax</b>
                 </div>
             </div>
 
@@ -101,7 +100,7 @@
 
                     @if ($pkg->allow_installment)
                         <div style="font-size: 0.74rem; color: #0284c7; font-weight: 600; margin-top: 2px;">
-                            ✨ Tersedia Skema Cicilan (DP Rp {{ number_format($pkg->min_dp, 0, ',', '.') }})
+                            Tersedia Skema Cicilan (DP Rp {{ number_format($pkg->min_dp, 0, ',', '.') }})
                         </div>
                     @endif
                 </div>

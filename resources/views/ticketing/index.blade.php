@@ -9,8 +9,8 @@
             <span>/</span>
             <span class="text-gray-900 font-semibold">Buana Ticketing</span>
         </div>
-        <a href="{{ route('ticketing.history') }}" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 shadow-sm">
-            🎫 Tiket & Boarding Pass Saya
+        <a href="{{ route('ticketing.history') }}" class="inline-flex items-center text-xs font-semibold px-3.5 py-2 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 shadow-2xs">
+            Tiket & Boarding Pass Saya
         </a>
     </div>
 
@@ -39,19 +39,17 @@
     </div>
 
     <!-- Tab Selector -->
-    <div class="flex border-b border-gray-200 gap-4">
+    <div class="flex border-b border-gray-200 gap-6">
         <button type="button" 
             @click="activeTab = 'transport'" 
-            :class="activeTab === 'transport' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
-            class="pb-3 text-sm border-b-2 flex items-center space-x-2 transition-all">
-            <span>🚆</span>
+            :class="activeTab === 'transport' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+            class="pb-3 text-sm border-b-2 transition-all cursor-pointer">
             <span>Transportasi (KAI / Pesawat / Bus / Kapal)</span>
         </button>
         <button type="button" 
             @click="activeTab = 'events'" 
-            :class="activeTab === 'events' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
-            class="pb-3 text-sm border-b-2 flex items-center space-x-2 transition-all">
-            <span>🎪</span>
+            :class="activeTab === 'events' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+            class="pb-3 text-sm border-b-2 transition-all cursor-pointer">
             <span>Tiket Event & Seminar Kampus</span>
         </button>
     </div>
@@ -68,10 +66,10 @@
                 <label class="text-xs font-bold text-gray-700 block mb-1 mt-0">Moda Transportasi</label>
                 <select name="mode" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl">
                     <option value="all" @selected(($selectedMode ?? '') === '' || ($selectedMode ?? '') === 'all')>Semua Moda Transportasi</option>
-                    <option value="kereta" @selected(($selectedMode ?? '') === 'kereta')>🚆 Kereta Api (KAI)</option>
-                    <option value="pesawat" @selected(($selectedMode ?? '') === 'pesawat')>✈️ Pesawat Terbang</option>
-                    <option value="bus" @selected(($selectedMode ?? '') === 'bus')>🚌 Bus AKAP Antarkota</option>
-                    <option value="kapal" @selected(($selectedMode ?? '') === 'kapal')>🚢 Kapal Laut (PELNI)</option>
+                    <option value="kereta" @selected(($selectedMode ?? '') === 'kereta')>Kereta Api (KAI)</option>
+                    <option value="pesawat" @selected(($selectedMode ?? '') === 'pesawat')>Pesawat Terbang</option>
+                    <option value="bus" @selected(($selectedMode ?? '') === 'bus')>Bus AKAP Antarkota</option>
+                    <option value="kapal" @selected(($selectedMode ?? '') === 'kapal')>Kapal Laut (PELNI)</option>
                 </select>
             </div>
             <div class="sm:col-span-3">
@@ -79,12 +77,12 @@
                 <input type="date" name="date" value="{{ $travelDate ?? '' }}" class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl">
             </div>
             <div class="sm:col-span-2 flex gap-1.5">
-                <button type="submit" class="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                    🔍 Cari
+                <button type="submit" class="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
+                    Cari Rute
                 </button>
                 @if(!empty($searchQuery) || (!empty($selectedMode) && $selectedMode !== 'all') || !empty($travelDate))
                     <a href="{{ route('ticketing.index') }}" class="py-2.5 px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl">
-                        ↺
+                        Reset
                     </a>
                 @endif
             </div>
