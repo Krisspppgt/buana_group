@@ -57,7 +57,7 @@ class MidtransService
             ->acceptJson()
             ->timeout(30)
             ->connectTimeout(15)
-            ->withOptions(['force_ip_resolve' => 'v4'])
+            ->withOptions($this->httpOptions())
             ->get($this->coreApiBaseUrl()."/v2/{$orderId}/status");
 
         if (! $response->successful()) {
@@ -108,7 +108,7 @@ class MidtransService
             ->acceptJson()
             ->timeout(30)
             ->connectTimeout(15)
-            ->withOptions(['force_ip_resolve' => 'v4'])
+            ->withOptions($this->httpOptions())
             ->post($this->snapApiUrl(), $payload);
 
         if (! $response->successful()) {
@@ -137,5 +137,45 @@ class MidtransService
         $expected = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
         return hash_equals($expected, $signatureKey);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function httpOptions(): array
+    {
+        $options = ['force_ip_resolve' => 'v4'];
+        $caBundle = $this->resolveCaBundle();
+
+        if ($caBundle !== null) {
+            $options['verify'] = $caBundle;
+        } elseif (app()->environment('local', 'testing')) {
+            $options['verify'] = false;
+        }
+
+        return $options;
+    }
+
+    private function resolveCaBundle(): ?string
+    {
+        $configured = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
+        if (! empty($configured) && is_file($configured)) {
+            return $configured;
+        }
+
+        $candidates = [
+            'D:/xampp/apache/bin/curl-ca-bundle.crt',
+            'C:/xampp/apache/bin/curl-ca-bundle.crt',
+            'D:/xampp/php/extras/ssl/cacert.pem',
+            'C:/xampp/php/extras/ssl/cacert.pem',
+        ];
+
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 }

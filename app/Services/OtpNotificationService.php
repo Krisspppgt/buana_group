@@ -25,6 +25,16 @@ class OtpNotificationService
             .'Demi keamanan, jangan bagikan kode ini kepada siapa pun.';
 
         if (empty($token)) {
+            if (app()->isProduction()) {
+                Log::error('FONNTE_TOKEN belum diisi, OTP WhatsApp tidak dapat dikirim.', ['phone' => $phone]);
+
+                return [
+                    'sent' => false,
+                    'simulated' => false,
+                    'message' => 'Layanan OTP WhatsApp belum tersedia. Silakan gunakan saluran Gmail.',
+                ];
+            }
+
             Log::info('[SIMULASI WA OTP - Fonnte Token belum diisi]', [
                 'phone' => $phone,
                 'user' => $userName,
@@ -40,15 +50,25 @@ class OtpNotificationService
         }
 
         try {
-            $response = Http::withHeaders([
+            $client = Http::withHeaders([
                 'Authorization' => $token,
-            ])->timeout(10)->post('https://api.fonnte.com/send', [
+            ])->asForm()->timeout(15);
+
+            $caBundle = $this->resolveCaBundle();
+            if ($caBundle !== null) {
+                $client = $client->withOptions(['verify' => $caBundle]);
+            } elseif (app()->environment('local', 'testing')) {
+                $client = $client->withoutVerifying();
+            }
+
+            $response = $client->post('https://api.fonnte.com/send', [
                 'target' => $phone,
                 'message' => $message,
                 'countryCode' => '62',
+                'connectOnly' => 'true',
             ]);
 
-            if ($response->successful() && ($response->json('status') === true || $response->json('status') === 'true')) {
+            if ($response->successful() && filter_var($response->json('status'), FILTER_VALIDATE_BOOLEAN)) {
                 return [
                     'sent' => true,
                     'simulated' => false,
@@ -56,18 +76,51 @@ class OtpNotificationService
                 ];
             }
 
+            $reason = (string) ($response->json('reason') ?? '');
             Log::warning('Fonnte WA OTP gagal terkirim', [
                 'phone' => $phone,
                 'status' => $response->status(),
+                'reason' => $reason,
                 'body' => $response->body(),
             ]);
+
+            $friendlyMessage = match ($reason) {
+                'device disconnected' => 'Layanan WhatsApp Buana Group saat ini sedang terputus (device offline). Silakan coba saluran Gmail.',
+                default => 'Gagal mengirim OTP ke WhatsApp. Silakan coba lagi atau gunakan saluran Gmail.',
+            };
 
             return [
                 'sent' => false,
                 'simulated' => false,
-                'message' => 'Gagal mengirim OTP ke WhatsApp. Silakan coba lagi atau gunakan saluran Gmail.',
+                'message' => $friendlyMessage,
             ];
         } catch (\Throwable $e) {
+            // Fallback khusus bila terjadi cURL error 60 (SSL cert issue di Windows/XAMPP) pada local/testing
+            if (app()->environment('local', 'testing') && str_contains($e->getMessage(), 'cURL error 60')) {
+                try {
+                    $retryResponse = Http::withHeaders(['Authorization' => $token])
+                        ->asForm()
+                        ->timeout(15)
+                        ->withoutVerifying()
+                        ->post('https://api.fonnte.com/send', [
+                            'target' => $phone,
+                            'message' => $message,
+                            'countryCode' => '62',
+                            'connectOnly' => 'true',
+                        ]);
+
+                    if ($retryResponse->successful() && filter_var($retryResponse->json('status'), FILTER_VALIDATE_BOOLEAN)) {
+                        return [
+                            'sent' => true,
+                            'simulated' => false,
+                            'message' => 'Kode OTP berhasil dikirim ke WhatsApp Anda.',
+                        ];
+                    }
+                } catch (\Throwable) {
+                    // Teruskan ke logging exception utama
+                }
+            }
+
             Log::error('Fonnte WA OTP exception: '.$e->getMessage(), ['phone' => $phone]);
 
             return [
@@ -76,6 +129,33 @@ class OtpNotificationService
                 'message' => 'Terjadi gangguan koneksi ke layanan WhatsApp. Silakan coba beberapa saat lagi.',
             ];
         }
+    }
+
+    /**
+     * Cari lokasi CA certificate bundle untuk lingkungan Windows/XAMPP atau vendor.
+     */
+    private function resolveCaBundle(): ?string
+    {
+        $configured = ini_get('curl.cainfo') ?: ini_get('openssl.cafile');
+        if (! empty($configured) && is_file($configured)) {
+            return $configured;
+        }
+
+        $candidates = [
+            'D:/xampp/apache/bin/curl-ca-bundle.crt',
+            'C:/xampp/apache/bin/curl-ca-bundle.crt',
+            base_path('vendor/midtrans/midtrans-php/data/cacert.pem'),
+            'D:/xampp/php/extras/ssl/cacert.pem',
+            'C:/xampp/php/extras/ssl/cacert.pem',
+        ];
+
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     /**
