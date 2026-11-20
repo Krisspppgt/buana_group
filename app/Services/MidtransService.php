@@ -101,7 +101,7 @@ class MidtransService
                 'phone' => $order->ship_phone ?: ($order->user?->phone ?? '081234567890'),
             ],
             'callbacks' => [
-                'finish' => route('payment.checkout', $order->code),
+                'finish' => route('payment.invoice', ['code' => $order->code, 'cek_status' => 1]),
             ],
         ];
 

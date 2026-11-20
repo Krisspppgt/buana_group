@@ -168,19 +168,4 @@ class WaterOrderController extends Controller
 
         return back()->with('success', "Status pengiriman armada berhasil diperbarui ke: {$newStatus->label()}.");
     }
-
-    /**
-     * Menampilkan riwayat pesanan air mineral pengguna.
-     */
-    public function history(Request $request): View
-    {
-        $user = $request->user();
-        $orders = Order::with('items.product')
-            ->where('user_id', $user->id)
-            ->where('unit', Unit::Air)
-            ->latest()
-            ->paginate(10);
-
-        return view('water.history', compact('orders'));
-    }
 }

@@ -16,9 +16,6 @@
                 Pesan galon 19L, botol, dan gelas higienis untuk kebutuhan kantor, fakultas, acara seminar, maupun langganan rutin rumah tangga.
             </p>
         </div>
-        <a href="{{ route('water.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            Riwayat Pesanan
-        </a>
     </div>
 </div>
 

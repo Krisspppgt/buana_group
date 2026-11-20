@@ -12,7 +12,7 @@
             <span class="text-gray-900 font-semibold">Detail Booking #{{ $booking->code }}</span>
         </div>
         <div class="flex items-center space-x-2">
-            <a href="{{ route('tour.history') }}" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50">
+            <a href="{{ route('orders.history') }}" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50">
                 📋 Riwayat Booking
             </a>
             <button onclick="window.print()" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm">

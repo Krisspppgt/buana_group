@@ -44,8 +44,15 @@ class PaymentController extends Controller
         $syncMessage = null;
         $latestPayment = $this->syncPendingMidtransPayment($order, $midtrans, $syncMessage);
 
-        if ($request->boolean('cek_status') && $syncMessage !== null) {
-            session()->flash('info', $syncMessage);
+        if ($request->boolean('cek_status')) {
+            if ($latestPayment && $latestPayment->status === PaymentStatus::Success) {
+                return redirect()->route('payment.invoice', $order->code)
+                    ->with('success', $syncMessage ?? 'Pembayaran berhasil dikonfirmasi lunas!');
+            }
+
+            if ($syncMessage !== null) {
+                session()->flash('info', $syncMessage);
+            }
         }
 
         $maxRedeemablePoints = min((int) $user->loyalty_points, (int) floor($order->subtotal * 0.5));
@@ -381,13 +388,17 @@ class PaymentController extends Controller
             ->firstOrFail();
 
         if ($order->status === OrderStatus::WaitingConfirmation) {
-            return redirect()->route('order.waiting-confirmation', $order->code)
-                ->withErrors(['order' => 'Pembayaran belum dapat dilakukan sebelum pesanan dikonfirmasi oleh admin.']);
+            return response()->json([
+                'status' => 'blocked',
+                'message' => 'Pembayaran belum dapat dilakukan sebelum pesanan dikonfirmasi oleh admin.',
+            ], 422);
         }
 
         if ($order->status === OrderStatus::Cancelled) {
-            return redirect()->route('order.waiting-confirmation', $order->code)
-                ->withErrors(['order' => 'Pesanan ini telah dibatalkan dan tidak dapat dibayar.']);
+            return response()->json([
+                'status' => 'cancelled',
+                'message' => 'Pesanan ini telah dibatalkan dan tidak dapat dibayar.',
+            ], 422);
         }
 
         $data = $request->validate([
@@ -417,16 +428,19 @@ class PaymentController extends Controller
                 }
             }
         } catch (Throwable) {
-            // Jika server lokal timeout ke api.sandbox.midtrans.com pada mode Sandbox, izinkan konfirmasi dari Snap callback
-            $isSandboxSuccess = ! $midtrans->isProduction()
-                && in_array($data['transaction_status'], ['settlement', 'capture'], true)
-                && ((int) ($data['gross_amount'] ?? $payment->amount) === (int) $payment->amount);
+            // Lanjut ke fallback sandbox di bawah jika Core API gagal diakses
+        }
 
-            if ($isSandboxSuccess) {
-                $this->markPaymentAsSuccess($payment, (string) ($data['payment_type'] ?? $payment->method));
+        // Fallback Sandbox: jika Midtrans Snap JS sudah memicu onSuccess (settlement/capture)
+        // namun Core API belum sinkron/timeout pada mode Sandbox
+        $isSandboxSuccess = ! $midtrans->isProduction()
+            && in_array($data['transaction_status'], ['settlement', 'capture'], true)
+            && ((int) ($data['gross_amount'] ?? $payment->amount) === (int) $payment->amount);
 
-                return response()->json(['status' => 'paid_sandbox_fallback']);
-            }
+        if ($isSandboxSuccess) {
+            $this->markPaymentAsSuccess($payment, (string) ($data['payment_type'] ?? $payment->method));
+
+            return response()->json(['status' => 'paid_sandbox_fallback']);
         }
 
         return response()->json(['status' => 'pending']);
@@ -447,8 +461,12 @@ class PaymentController extends Controller
         $syncMessage = null;
         $latestPayment = $this->syncPendingMidtransPayment($order, $midtrans, $syncMessage);
 
-        if ($request->boolean('cek_status') && $syncMessage !== null) {
-            session()->flash('info', $syncMessage);
+        if ($request->boolean('cek_status')) {
+            if ($latestPayment && $latestPayment->status === PaymentStatus::Success) {
+                session()->flash('success', $syncMessage ?? 'Pembayaran berhasil dikonfirmasi lunas!');
+            } elseif ($syncMessage !== null) {
+                session()->flash('info', $syncMessage);
+            }
         }
 
         return view('payment.invoice', compact('order', 'latestPayment'));

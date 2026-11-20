@@ -16,9 +16,6 @@
                 Snack box, nasi kotak, katering prasmanan, kalkulator anggaran otomatis & penjadwalan pengiriman bertahap sesuai rundown acara.
             </p>
         </div>
-        <a href="{{ route('food.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            Riwayat Katering
-        </a>
     </div>
 </div>
 

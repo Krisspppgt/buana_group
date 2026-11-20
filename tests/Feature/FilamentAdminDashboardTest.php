@@ -70,6 +70,20 @@ class FilamentAdminDashboardTest extends TestCase
             'send_at' => now(),
         ]);
 
+        Order::create([
+            'code' => Order::newCode(),
+            'user_id' => $this->admin->id,
+            'unit' => Unit::Air,
+            'status' => OrderStatus::WaitingConfirmation,
+            'subtotal' => 270000,
+            'ship_fee' => 0,
+            'total' => 270000,
+            'ship_name' => 'Panitia Seminar',
+            'ship_phone' => '081111111111',
+            'ship_addr' => 'Kampus UNWAHAS',
+            'send_at' => now(),
+        ]);
+
         $response = $this->actingAs($this->admin)->get('/admin');
 
         $response->assertStatus(200);

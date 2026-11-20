@@ -214,4 +214,63 @@ class PaymentAndLoyaltyTest extends TestCase
             'transaction_status' => 'settlement',
         ])->assertStatus(403);
     }
+
+    public function test_snap_confirm_sandbox_fallback_marks_paid_and_cek_status_redirects_to_invoice(): void
+    {
+        config()->set('services.midtrans.server_key', 'SB-Mid-server-TESTKEY');
+        config()->set('services.midtrans.client_key', 'SB-Mid-client-TESTKEY');
+        config()->set('services.midtrans.is_production', false);
+
+        Http::fake([
+            'https://api.sandbox.midtrans.com/v2/*' => Http::response([
+                'status_code' => '404',
+                'status_message' => "Transaction doesn't exist.",
+            ], 404),
+        ]);
+
+        $order = Order::create([
+            'code' => Order::newCode(),
+            'user_id' => $this->civitas->id,
+            'unit' => Unit::Air,
+            'status' => OrderStatus::Pending,
+            'subtotal' => 30000,
+            'ship_fee' => 0,
+            'total' => 30000,
+            'ship_name' => 'Ahmad',
+            'ship_phone' => '085512345678',
+            'ship_addr' => 'Kampus UNWAHAS',
+        ]);
+
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'ref' => 'MID-TEST99-'.$order->code,
+            'method' => 'qris',
+            'amount' => 30000,
+            'status' => PaymentStatus::Pending,
+        ]);
+
+        $this->actingAs($this->civitas)
+            ->postJson(route('payment.snap-confirm', $order->code), [
+                'order_id' => $payment->ref,
+                'transaction_status' => 'settlement',
+                'payment_type' => 'qris',
+                'gross_amount' => '30000.00',
+            ])
+            ->assertStatus(200)
+            ->assertJson(['status' => 'paid_sandbox_fallback']);
+
+        $this->assertEquals(PaymentStatus::Success, $payment->fresh()->status);
+        $this->assertEquals(OrderStatus::Processing, $order->fresh()->status);
+
+        // Cek status pada halaman checkout otomatis mengarahkan ke halaman Invoice
+        $this->actingAs($this->civitas)
+            ->get(route('payment.checkout', ['code' => $order->code, 'cek_status' => 1]))
+            ->assertRedirect(route('payment.invoice', $order->code));
+
+        // Halaman Invoice dengan ?cek_status=1 juga harus merender View 200 dengan status LUNAS
+        $this->actingAs($this->civitas)
+            ->get(route('payment.invoice', ['code' => $order->code, 'cek_status' => 1]))
+            ->assertStatus(200)
+            ->assertSee('LUNAS');
+    }
 }

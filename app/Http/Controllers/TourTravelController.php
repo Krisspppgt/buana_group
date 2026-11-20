@@ -187,18 +187,4 @@ class TourTravelController extends Controller
 
         return back()->with('success', $statusMsg);
     }
-
-    /**
-     * Riwayat pendaftaran tour & travel pengguna.
-     */
-    public function history(Request $request): View
-    {
-        $user = $request->user();
-        $bookings = TourBooking::with('tourPackage')
-            ->where('user_id', $user->id)
-            ->latest('id')
-            ->paginate(10);
-
-        return view('tour.history', compact('bookings'));
-    }
 }

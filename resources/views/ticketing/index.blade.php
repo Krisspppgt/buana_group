@@ -9,9 +9,6 @@
             <span>/</span>
             <span class="text-gray-900 font-semibold">Buana Ticketing</span>
         </div>
-        <a href="{{ route('ticketing.history') }}" class="inline-flex items-center text-xs font-semibold px-3.5 py-2 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 shadow-2xs">
-            Tiket & Boarding Pass Saya
-        </a>
     </div>
 
     <!-- Alert / Messages -->

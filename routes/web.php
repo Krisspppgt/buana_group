@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FoodServiceController;
 use App\Http\Controllers\KonveksiController;
 use App\Http\Controllers\OrderConfirmationController;
+use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\TicketingController;
@@ -81,7 +82,6 @@ Route::middleware('auth')->group(function () {
     Route::prefix('air-mineral')->name('water.')->group(function () {
         Route::get('/', [WaterOrderController::class, 'index'])->name('index');
         Route::post('/', [WaterOrderController::class, 'store'])->name('store');
-        Route::get('/riwayat', [WaterOrderController::class, 'history'])->name('history');
         Route::get('/lacak/{code}', [WaterOrderController::class, 'show'])->name('show');
         Route::post('/lacak/{code}/status', [WaterOrderController::class, 'updateStatus'])->name('status.update');
     });
@@ -90,7 +90,6 @@ Route::middleware('auth')->group(function () {
     Route::prefix('food-services')->name('food.')->group(function () {
         Route::get('/', [FoodServiceController::class, 'index'])->name('index');
         Route::post('/', [FoodServiceController::class, 'store'])->name('store');
-        Route::get('/riwayat', [FoodServiceController::class, 'history'])->name('history');
         Route::get('/pesanan/{code}', [FoodServiceController::class, 'show'])->name('show');
         Route::post('/pesanan/{code}/status', [FoodServiceController::class, 'updateStatus'])->name('status.update');
     });
@@ -102,7 +101,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/booking', [TourTravelController::class, 'storeBooking'])->name('bookings.store');
         Route::get('/booking/{code}', [TourTravelController::class, 'showBooking'])->name('bookings.show');
         Route::post('/booking/{code}/cicilan', [TourTravelController::class, 'payInstallment'])->name('bookings.pay');
-        Route::get('/riwayat', [TourTravelController::class, 'history'])->name('history');
     });
 
     // Modul Unit 4: Buana Ticketing
@@ -110,7 +108,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [TicketingController::class, 'index'])->name('index');
         Route::post('/pesan-transport', [TicketingController::class, 'orderTransport'])->name('order.transport');
         Route::post('/pesan-event', [TicketingController::class, 'orderEvent'])->name('order.event');
-        Route::get('/riwayat', [TicketingController::class, 'history'])->name('history');
         Route::get('/boarding-pass/{code}', [TicketingController::class, 'show'])->name('show');
         Route::post('/scan/{code}', [TicketingController::class, 'scan'])->name('scan');
     });
@@ -125,6 +122,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/tracking/{code}', [KonveksiController::class, 'tracking'])->name('tracking');
         Route::post('/tracking/{code}/stage', [KonveksiController::class, 'updateStage'])->name('tracking.stage');
     });
+
+    // Riwayat Pesanan Terpadu (Lintas 5 Unit Usaha)
+    Route::get('/pesanan', [OrderHistoryController::class, 'index'])
+        ->name('orders.history');
 
     // Halaman Menunggu Konfirmasi Admin (Pesanan Borongan / B2B sebelum pembayaran)
     Route::get('/pesanan/{code}/menunggu-konfirmasi', [OrderConfirmationController::class, 'show'])

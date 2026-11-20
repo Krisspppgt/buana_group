@@ -465,7 +465,7 @@
                         },
                         body: JSON.stringify(result || {}),
                     }).finally(function () {
-                        window.location.href = @json(route('payment.checkout', ['code' => $order->code, 'cek_status' => 1]));
+                        window.location.href = @json(route('payment.invoice', ['code' => $order->code, 'cek_status' => 1]));
                     });
                 },
                 onPending: function () {

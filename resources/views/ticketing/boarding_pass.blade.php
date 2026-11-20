@@ -12,7 +12,7 @@
             <span class="text-gray-900 font-semibold">E-Boarding Pass</span>
         </div>
         <div class="flex items-center space-x-2">
-            <a href="{{ route('ticketing.history') }}" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 shadow-sm">
+            <a href="{{ route('orders.history') }}" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 shadow-sm">
                 📋 Tiket Saya
             </a>
             <button onclick="window.print()" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm">

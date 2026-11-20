@@ -154,7 +154,7 @@
     <a href="{{ route('food.index') }}" class="btn" style="background:#d97706; text-decoration:none;">
         🍱 Pesan Menu Lain
     </a>
-    <a href="{{ route('food.history') }}" class="btn btn-ghost" style="text-decoration:none;">
+    <a href="{{ route('orders.history') }}" class="btn btn-ghost" style="text-decoration:none;">
         📋 Riwayat Katering
     </a>
 </div>

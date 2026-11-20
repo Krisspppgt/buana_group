@@ -264,7 +264,7 @@
     <a href="{{ route('water.index') }}" class="btn" style="background:#0f766e; text-decoration:none;">
         💧 Pesan Air Tambahan
     </a>
-    <a href="{{ route('water.history') }}" class="btn btn-ghost" style="text-decoration:none;">
+    <a href="{{ route('orders.history') }}" class="btn btn-ghost" style="text-decoration:none;">
         📋 Riwayat Pesanan
     </a>
 </div>

@@ -16,9 +16,6 @@
                 Etalase paket wisata, study tour KKL fakultas, ziarah wali, serta program tabungan & skema cicilan Umrah civitas UNWAHAS.
             </p>
         </div>
-        <a href="{{ route('tour.history') }}" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold backdrop-blur-xs transition shrink-0">
-            Riwayat Booking & Cicilan
-        </a>
     </div>
 </div>
 

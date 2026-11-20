@@ -247,6 +247,11 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     <span>Paket Rapat</span>
                 </a>
+
+                <a href="{{ route('orders.history') }}" class="px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 {{ $currentRoute === 'orders.history' ? 'bg-white text-[#0D5A47] font-bold shadow-xs' : 'text-emerald-100 hover:text-white hover:bg-white/10' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Pesanan</span>
+                </a>
             </nav>
 
             {{-- 3. Right: User Profile, Loyalty Points, Admin Shortcut & Logout --}}
@@ -431,7 +436,15 @@
                 <span>5 Unit</span>
             </button>
 
-            {{-- 3. Paket Rapat --}}
+            {{-- 3. Pesanan (Riwayat Terpadu) --}}
+            <a href="{{ route('orders.history') }}" class="flex flex-col items-center gap-1 {{ $currentRoute == 'orders.history' ? 'text-[#0D5A47] font-bold' : 'text-gray-400 font-medium' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Pesanan</span>
+            </a>
+
+            {{-- 4. Paket Rapat --}}
             <a href="{{ route('order.campus.rincian') }}" class="flex flex-col items-center gap-1 {{ $currentRoute == 'order.campus.rincian' ? 'text-[#0D5A47] font-bold' : 'text-gray-400 font-medium' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />

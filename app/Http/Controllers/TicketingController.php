@@ -253,17 +253,4 @@ class TicketingController extends Controller
 
         return back()->with('success', 'VALIDASI BERHASIL! E-Boarding Pass sah. Silakan masuk.');
     }
-
-    /**
-     * Riwayat tiket & boarding pass pengguna.
-     */
-    public function history(Request $request): View
-    {
-        $user = $request->user();
-        $tickets = Ticket::where('user_id', $user->id)
-            ->latest('id')
-            ->paginate(10);
-
-        return view('ticketing.history', compact('tickets'));
-    }
 }

@@ -57,6 +57,7 @@ class LatestOrdersWidget extends TableWidget
                     ->badge()
                     ->formatStateUsing(fn (OrderStatus $state): string => $state->label())
                     ->color(fn (OrderStatus $state): string => match ($state) {
+                        OrderStatus::WaitingConfirmation => 'warning',
                         OrderStatus::Pending => 'warning',
                         OrderStatus::Paid => 'info',
                         OrderStatus::Processing => 'primary',

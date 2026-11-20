@@ -171,19 +171,4 @@ class FoodServiceController extends Controller
 
         return back()->with('success', "Status pengantaran katering berhasil diperbarui ke: {$newStatus->label()}.");
     }
-
-    /**
-     * Riwayat pesanan Buana Food Services.
-     */
-    public function history(Request $request): View
-    {
-        $user = $request->user();
-        $orders = Order::with('items.product')
-            ->where('user_id', $user->id)
-            ->where('unit', Unit::Food)
-            ->latest()
-            ->paginate(10);
-
-        return view('food.history', compact('orders'));
-    }
 }
