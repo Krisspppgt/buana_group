@@ -108,21 +108,25 @@
 
     @php
         $paidRecord = $order->payments()->where('status', \App\Enums\PaymentStatus::Success)->latest('id')->first();
+        $pendingTempo = $order->payments()->where('method', 'tempo_b2b')->where('status', \App\Enums\PaymentStatus::Pending)->latest('id')->first();
     @endphp
-    <div style="margin-top: 12px; padding: 12px; border-radius: 12px; background: {{ $paidRecord ? '#ecfdf5' : '#fffbeb' }}; border: 1px solid {{ $paidRecord ? '#a7f3d0' : '#fde68a' }}; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <div style="margin-top: 12px; padding: 12px; border-radius: 12px; background: {{ $paidRecord ? '#ecfdf5' : ($pendingTempo ? '#eff6ff' : '#fffbeb') }}; border: 1px solid {{ $paidRecord ? '#a7f3d0' : ($pendingTempo ? '#bfdbfe' : '#fde68a') }}; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
         <div style="font-size: 0.8rem;">
             @if ($paidRecord)
                 <b style="color: #065f46;">✅ Lunas via {{ strtoupper($paidRecord->method) }} ({{ $paidRecord->ref }})</b>
                 @if ($order->points_earned > 0)
                     <div style="color: #047857; font-size: 0.75rem;">🪙 Reward: +{{ number_format($order->points_earned, 0, ',', '.') }} Buana Loyalty Points</div>
                 @endif
+            @elseif ($pendingTempo)
+                <b style="color: #1e40af;">📄 Invoice Tempo Institusi / B2B ({{ $pendingTempo->ref }})</b>
+                <div style="color: #1d4ed8; font-size: 0.75rem;">TOP maksimal 30 hari — menunggu pelunasan bagian keuangan</div>
             @else
                 <b style="color: #92400e;">💳 Payment Gateway Terpadu & Tukar Poin</b>
-                <div style="color: #b45309; font-size: 0.75rem;">Bayar via QRIS, Virtual Account, E-Wallet, atau Paylater/Tempo Civitas</div>
+                <div style="color: #b45309; font-size: 0.75rem;">Bayar via QRIS, Virtual Account, E-Wallet, atau Tempo B2B terverifikasi</div>
             @endif
         </div>
-        <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $paidRecord ? '#0D5A47' : '#d97706' }};">
-            {{ $paidRecord ? '📄 Bukti Pembayaran' : '💳 Bayar / Tukar Poin' }}
+        <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $paidRecord ? '#0D5A47' : ($pendingTempo ? '#1d4ed8' : '#d97706') }};">
+            {{ $paidRecord ? '📄 Bukti Pembayaran' : ($pendingTempo ? '📄 Detail Tagihan' : '💳 Bayar / Tukar Poin') }}
         </a>
     </div>
 </div>

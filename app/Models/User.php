@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\Role;
 use App\Enums\Unit;
+use App\Enums\VerificationStatus;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,8 +19,31 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $attributes = [
+        'role' => Role::Customer->value,
+        'verification_status' => VerificationStatus::None->value,
+        'tempo_approved' => false,
+        'tempo_limit' => 0,
+    ];
+
     protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 'campus_id', 'loyalty_points', 'fcm_token',
+        'name',
+        'email',
+        'phone',
+        'password',
+        'role',
+        'requested_role',
+        'verification_status',
+        'campus_id',
+        'faculty',
+        'company_name',
+        'position',
+        'verification_note',
+        'verified_at',
+        'tempo_approved',
+        'tempo_limit',
+        'loyalty_points',
+        'fcm_token',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -27,6 +53,11 @@ class User extends Authenticatable implements FilamentUser
         return [
             'password' => 'hashed',
             'role' => Role::class,
+            'requested_role' => Role::class,
+            'verification_status' => VerificationStatus::class,
+            'verified_at' => 'datetime',
+            'tempo_approved' => 'boolean',
+            'tempo_limit' => 'integer',
         ];
     }
 
@@ -47,7 +78,91 @@ class User extends Authenticatable implements FilamentUser
 
     public function isCivitas(): bool
     {
-        return $this->role === Role::Civitas || ! empty($this->campus_id);
+        return $this->role === Role::Civitas;
+    }
+
+    public function isVerifiedMitra(): bool
+    {
+        return $this->role === Role::Coordinator;
+    }
+
+    public function hasPendingVerification(): bool
+    {
+        return $this->verification_status === VerificationStatus::Pending;
+    }
+
+    public function isVerificationRejected(): bool
+    {
+        return $this->verification_status === VerificationStatus::Rejected;
+    }
+
+    /**
+     * Menghitung total tagihan Tempo B2B/Institusi yang masih terbuka (belum dilunasi).
+     */
+    public function usedTempoAmount(): int
+    {
+        return (int) Payment::query()
+            ->where('method', 'tempo_b2b')
+            ->where('status', PaymentStatus::Pending)
+            ->whereHas('order', function ($query): void {
+                $query->where('user_id', $this->id)
+                    ->where('status', '!=', OrderStatus::Cancelled);
+            })
+            ->sum('amount');
+    }
+
+    public function remainingTempoLimit(): int
+    {
+        if (! $this->tempo_approved || (int) $this->tempo_limit <= 0) {
+            return 0;
+        }
+
+        return max(0, (int) $this->tempo_limit - $this->usedTempoAmount());
+    }
+
+    /**
+     * Status civitas atau mitra tidak otomatis memberi fasilitas kredit; Tempo hanya untuk akun yang disetujui admin dengan limit memadai.
+     */
+    public function canUseTempo(int $amount = 0): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if (! $this->isCivitas() && ! $this->isVerifiedMitra()) {
+            return false;
+        }
+
+        if (! $this->tempo_approved || (int) $this->tempo_limit <= 0) {
+            return false;
+        }
+
+        return ($this->usedTempoAmount() + max(0, $amount)) <= (int) $this->tempo_limit;
+    }
+
+    public function approveVerification(Role $targetRole, bool $approveTempo = false, int $tempoLimit = 0, ?string $note = null): void
+    {
+        $this->update([
+            'role' => $targetRole,
+            'requested_role' => null,
+            'verification_status' => VerificationStatus::Approved,
+            'verification_note' => $note,
+            'verified_at' => now(),
+            'tempo_approved' => $approveTempo,
+            'tempo_limit' => $approveTempo ? max(0, $tempoLimit) : 0,
+        ]);
+    }
+
+    public function rejectVerification(?string $note = null): void
+    {
+        $this->update([
+            'role' => Role::Customer,
+            'verification_status' => VerificationStatus::Rejected,
+            'verification_note' => $note,
+            'verified_at' => null,
+            'tempo_approved' => false,
+            'tempo_limit' => 0,
+        ]);
     }
 
     public function isCourier(): bool

@@ -426,7 +426,8 @@
                                     id="desktop-mitra-company"
                                     name="company_name"
                                     placeholder="Contoh: SMA NU 1 Semarang / CV Mitra Berkah" 
-                                    type="text"/>
+                                    type="text"
+                                    value="{{ old('company_name') }}"/>
                             </div>
                         </div>
 
@@ -453,7 +454,8 @@
                                     <input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-11 pr-4 py-2.5 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-outline/70 transition-all border-0" 
                                         name="position"
                                         placeholder="Contoh: Kabag Pengadaan" 
-                                        type="text"/>
+                                        type="text"
+                                        value="{{ old('position') }}"/>
                                 </div>
                             </div>
                         </div>
@@ -1010,6 +1012,9 @@
                 dUnwahas.classList.toggle('hidden', type !== 'unwahas');
                 dUmum.classList.toggle('hidden', type !== 'umum');
                 dMitra.classList.toggle('hidden', type !== 'mitra');
+                dUnwahas.querySelectorAll('input, select').forEach(el => { el.disabled = (type !== 'unwahas'); });
+                dUmum.querySelectorAll('input, select').forEach(el => { el.disabled = (type !== 'umum'); });
+                dMitra.querySelectorAll('input, select').forEach(el => { el.disabled = (type !== 'mitra'); });
             }
 
             // 4. Mobile Card Selection Visuals
@@ -1045,6 +1050,9 @@
                 mUnwahas.classList.toggle('hidden', type !== 'unwahas');
                 mUmum.classList.toggle('hidden', type !== 'umum');
                 mMitra.classList.toggle('hidden', type !== 'mitra');
+                mUnwahas.querySelectorAll('input, select').forEach(el => { el.disabled = (type !== 'unwahas'); });
+                mUmum.querySelectorAll('input, select').forEach(el => { el.disabled = (type !== 'umum'); });
+                mMitra.querySelectorAll('input, select').forEach(el => { el.disabled = (type !== 'mitra'); });
             }
 
             // 6. Header subtext update

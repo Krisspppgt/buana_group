@@ -52,11 +52,12 @@ class PaymentAndLoyaltyTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Payment Gateway Terpadu');
         $response->assertSee('QRIS Terpadu Buana Group');
-        $response->assertSee('Paylater Civitas Mahasiswa / Pegawai');
+        $response->assertSee('Invoice Tempo Institusi / B2B (TOP 30 Hari)');
+        $response->assertSee('Tahap Lanjutan');
         $response->assertSee('Buana Loyalty Points');
     }
 
-    public function test_paying_order_records_payment_and_earns_buana_loyalty_points(): void
+    public function test_paylater_is_deferred_and_tempo_requires_admin_approval_with_limit(): void
     {
         $order = Order::create([
             'code' => Order::newCode(),
@@ -71,23 +72,56 @@ class PaymentAndLoyaltyTest extends TestCase
             'ship_addr' => 'Auditorium UNWAHAS',
         ]);
 
+        // 1. Paylater ditunda dari pilot (tahap lanjutan)
+        $this->actingAs($this->civitas)
+            ->post(route('payment.process', $order->code), ['method' => 'paylater'])
+            ->assertSessionHasErrors('method');
+
+        // 2. Status civitas tidak otomatis memberi fasilitas kredit / tempo
+        $this->actingAs($this->civitas)
+            ->post(route('payment.process', $order->code), ['method' => 'tempo_b2b'])
+            ->assertSessionHasErrors('method');
+
+        // 3. Setelah disetujui admin dengan limit Rp 1.000.000, Tempo B2B dapat digunakan
+        $this->civitas->update([
+            'tempo_approved' => true,
+            'tempo_limit' => 1000000,
+        ]);
+
         $response = $this->actingAs($this->civitas)->post(route('payment.process', $order->code), [
-            'method' => 'paylater',
+            'method' => 'tempo_b2b',
         ]);
 
         $response->assertRedirect(route('food.show', $order->code));
 
         $payment = Payment::where('order_id', $order->id)->first();
         $this->assertNotNull($payment);
-        $this->assertEquals('paylater', $payment->method);
+        $this->assertEquals('tempo_b2b', $payment->method);
         $this->assertEquals(500000, $payment->amount);
-        $this->assertEquals(PaymentStatus::Success, $payment->status);
+        $this->assertEquals(PaymentStatus::Pending, $payment->status);
 
         $order->refresh();
-        $this->assertEquals(5000, $order->points_earned); // 1% dari 500.000 = 5.000 Poin
+        $this->assertEquals(OrderStatus::Processing, $order->status);
+        $this->assertEquals(0, $order->points_earned); // Poin masuk setelah tagihan tempo dilunasi
+        $this->assertEquals(500000, $this->civitas->fresh()->remainingTempoLimit());
 
-        $this->civitas->refresh();
-        $this->assertEquals(5000, $this->civitas->loyalty_points);
+        // 4. Pesanan melebihi sisa limit tempo diblokir
+        $secondOrder = Order::create([
+            'code' => Order::newCode(),
+            'user_id' => $this->civitas->id,
+            'unit' => Unit::Food,
+            'status' => OrderStatus::Pending,
+            'subtotal' => 600000,
+            'ship_fee' => 0,
+            'total' => 600000,
+            'ship_name' => 'BEM Fakultas',
+            'ship_phone' => '085512345678',
+            'ship_addr' => 'Auditorium UNWAHAS',
+        ]);
+
+        $this->actingAs($this->civitas)
+            ->post(route('payment.process', $secondOrder->code), ['method' => 'tempo_b2b'])
+            ->assertSessionHasErrors('method');
     }
 
     public function test_user_can_redeem_loyalty_points_and_complete_midtrans_qris_via_webhook(): void

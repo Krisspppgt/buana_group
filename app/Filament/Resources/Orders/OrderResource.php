@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Orders;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\ProductionStage;
 use App\Enums\Unit;
 use App\Filament\Resources\Orders\Pages\ManageOrders;
@@ -25,6 +26,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 use UnitEnum;
 
 class OrderResource extends Resource
@@ -261,6 +263,51 @@ class OrderResource extends Resource
                         Notification::make()
                             ->title('Progres Produksi Diperbarui')
                             ->body("Tahap produksi order {$record->code} diperbarui ke: {$stage->label()}.")
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('settleTempo')
+                    ->label('Lunasi Tempo')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('warning')
+                    ->visible(fn (Order $record): bool => $record->payments()
+                        ->where('method', 'tempo_b2b')
+                        ->where('status', PaymentStatus::Pending)
+                        ->exists())
+                    ->requiresConfirmation()
+                    ->action(function (Order $record): void {
+                        DB::transaction(function () use ($record): void {
+                            $pendingTempo = $record->payments()
+                                ->where('method', 'tempo_b2b')
+                                ->where('status', PaymentStatus::Pending)
+                                ->latest('id')
+                                ->first();
+
+                            if (! $pendingTempo) {
+                                return;
+                            }
+
+                            $pendingTempo->update([
+                                'status' => PaymentStatus::Success,
+                                'paid_at' => now(),
+                            ]);
+
+                            if ($record->points_earned === 0 && $record->total > 0 && $record->user) {
+                                $earned = $record->user->earnLoyaltyPoints(
+                                    (int) $record->total,
+                                    $record->unit,
+                                    $record->code,
+                                    "Reward Pelunasan Tempo {$record->unit->label()} #{$record->code}"
+                                );
+                                $record->points_earned = $earned;
+                                $record->save();
+                            }
+                        });
+
+                        Notification::make()
+                            ->title('Tagihan Tempo Dilunasi')
+                            ->body("Invoice Tempo order {$record->code} telah ditandai lunas dan limit tempo akun dipulihkan.")
                             ->success()
                             ->send();
                     }),

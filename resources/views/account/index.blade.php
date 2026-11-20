@@ -17,11 +17,23 @@
                         <span class="px-2.5 py-0.5 rounded-full bg-emerald-400/20 border border-emerald-300/30 text-emerald-100 text-[11px] font-bold">
                             {{ $user->role_badge }}
                         </span>
+                        @if ($user->hasPendingVerification())
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-100 text-[11px] font-bold">
+                                Menunggu Verifikasi {{ $user->requested_role?->label() }}
+                            </span>
+                        @elseif ($user->isVerificationRejected())
+                            <span class="px-2.5 py-0.5 rounded-full bg-red-400/20 border border-red-300/40 text-red-100 text-[11px] font-bold">
+                                Pengajuan Ditolak
+                            </span>
+                        @endif
                     </div>
                     <p class="text-xs sm:text-sm text-emerald-100 mt-1">
                         {{ $user->email }} &bull; {{ $user->phone }}
                         @if ($user->campus_id)
                             &bull; NIM/NIP: <b class="text-white">{{ $user->campus_id }}</b>
+                        @endif
+                        @if ($user->company_name)
+                            &bull; Instansi: <b class="text-white">{{ $user->company_name }}</b>
                         @endif
                     </p>
                 </div>
@@ -41,6 +53,30 @@
         </div>
     @endif
 
+    @if ($user->hasPendingVerification())
+        <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl text-xs font-medium">
+            <div class="font-bold">Pengajuan Verifikasi {{ $user->requested_role?->label() }} Sedang Diproses</div>
+            <p class="mt-0.5">Anda tetap dapat langsung bertransaksi reguler (Lunas / DP via QRIS, VA, E-Wallet). Tarif khusus Civitas/Mitra dan fasilitas Tempo akan aktif setelah disetujui admin.</p>
+        </div>
+    @elseif ($user->isVerificationRejected())
+        <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl text-xs font-medium">
+            <div class="font-bold">Pengajuan Verifikasi Sebelumnya Ditolak</div>
+            <p class="mt-0.5">{{ $user->verification_note ?: 'Silakan perbarui data NIM/NIP atau Instansi Anda dengan benar lalu simpan profil untuk mengajukan ulang.' }}</p>
+        </div>
+    @endif
+
+    @if ($user->tempo_approved && $user->tempo_limit > 0)
+        <div class="p-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div>
+                <span class="font-bold block">Fasilitas Tempo Institusi / B2B Aktif (TOP Maksimal 30 Hari)</span>
+                <span>Limit disetujui: <b>Rp {{ number_format($user->tempo_limit, 0, ',', '.') }}</b> &bull; Terpakai: Rp {{ number_format($user->usedTempoAmount(), 0, ',', '.') }}</span>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-bold">
+                Sisa Limit: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
+            </span>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs font-semibold space-y-1">
             @foreach ($errors->all() as $error)
@@ -52,10 +88,10 @@
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         {{-- KOLOM KIRI: EDIT PROFIL AKUN (5 Cols) --}}
         <div class="md:col-span-5 card space-y-4">
-            <div class="pb-3 border-b border-gray-100">
-                <h2 class="text-base font-bold text-gray-900">Informasi Profil Akun</h2>
-                <p class="text-xs text-gray-500 mt-0.5">Lengkapi NIM/NIP UNWAHAS untuk mendapatkan tarif khusus civitas akademika.</p>
-            </div>
+                <div class="pb-3 border-b border-gray-100">
+                    <h2 class="text-base font-bold text-gray-900">Informasi Profil Akun</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Pengajuan NIM/NIP atau Instansi B2B diverifikasi admin sebelum tarif khusus aktif.</p>
+                </div>
 
             <form method="POST" action="{{ route('account.profile.update') }}" class="space-y-3">
                 @csrf
@@ -79,6 +115,21 @@
                 <div>
                     <label for="campus_id" class="mt-0">NIM / NIP UNWAHAS (Opsional)</label>
                     <input type="text" name="campus_id" id="campus_id" value="{{ old('campus_id', $user->campus_id) }}" maxlength="20" placeholder="Kosongkan jika pelanggan umum">
+                </div>
+
+                <div>
+                    <label for="faculty" class="mt-0">Fakultas / Unit Kerja (Opsional)</label>
+                    <input type="text" name="faculty" id="faculty" value="{{ old('faculty', $user->faculty) }}" maxlength="80" placeholder="Contoh: Fakultas Teknik / BAU">
+                </div>
+
+                <div>
+                    <label for="company_name" class="mt-0">Nama Instansi / Mitra B2B (Opsional)</label>
+                    <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $user->company_name) }}" maxlength="100" placeholder="Isi jika mewakili sekolah/perusahaan mitra">
+                </div>
+
+                <div>
+                    <label for="position" class="mt-0">Jabatan PIC (Opsional)</label>
+                    <input type="text" name="position" id="position" value="{{ old('position', $user->position) }}" maxlength="60" placeholder="Contoh: Kabag Pengadaan">
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -37,6 +38,12 @@ class UserSeeder extends Seeder
                 'phone' => '083333333333',
                 'password' => Hash::make('password123'),
                 'role' => Role::Coordinator,
+                'verification_status' => VerificationStatus::Approved,
+                'verified_at' => now(),
+                'company_name' => 'BEM Universitas Wahid Hasyim',
+                'position' => 'Koordinator Pengadaan',
+                'tempo_approved' => true,
+                'tempo_limit' => 10000000,
                 'campus_id' => 'BEM-2026',
             ],
             [
@@ -53,6 +60,11 @@ class UserSeeder extends Seeder
                 'phone' => '085555555555',
                 'password' => Hash::make('password123'),
                 'role' => Role::Civitas,
+                'verification_status' => VerificationStatus::Approved,
+                'verified_at' => now(),
+                'faculty' => 'Fakultas Teknik',
+                'tempo_approved' => false,
+                'tempo_limit' => 0,
                 'campus_id' => '24101001',
             ],
             [

@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\Unit;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,7 @@ use Throwable;
 class PaymentController extends Controller
 {
     /**
-     * Menampilkan halaman Checkout Payment Gateway Terpadu (Midtrans Snap + Paylater Civitas) & Tukar Poin.
+     * Menampilkan halaman Checkout Payment Gateway Terpadu (Midtrans Snap + Tempo B2B/Institusi) & Tukar Poin.
      */
     public function checkout(Request $request, string $code, MidtransService $midtrans): View
     {
@@ -79,7 +80,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Memproses pembayaran via Midtrans Snap (QRIS, VA, E-Wallet) atau Paylater/Tempo B2B internal.
+     * Memproses pembayaran via Midtrans Snap (QRIS, VA, E-Wallet) atau Tempo Institusi/B2B terverifikasi.
      */
     public function process(Request $request, string $code, MidtransService $midtrans): RedirectResponse
     {
@@ -90,59 +91,53 @@ class PaymentController extends Controller
             ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
-        $data = $request->validate([
-            'method' => ['required', 'string', 'in:qris,va_bsi,va_jateng,va_mandiri,gopay,dana,paylater,tempo_b2b'],
-            'use_points' => ['nullable', 'boolean'],
-        ]);
-
-        $isInternalCampusCredit = in_array($data['method'], ['paylater', 'tempo_b2b'], true);
-
-        if ($isInternalCampusCredit && ! $user->isCivitas() && ! $user->isAdmin() && ! $user->isStaff()) {
+        if ($request->input('method') === 'paylater') {
             return back()->withErrors([
-                'method' => 'Metode Paylater & Tempo B2B khusus untuk akun Civitas Akademika UNWAHAS (NIM/NIP).',
+                'method' => 'Metode Paylater ditunda ke tahap lanjutan setelah pilot melalui mitra berizin.',
             ]);
         }
 
-        // 1. Jika metode Paylater / Tempo B2B (kredit internal kampus, tanpa Midtrans)
-        if ($isInternalCampusCredit) {
-            $payment = DB::transaction(function () use ($user, $order, $data) {
-                $orderOwner = $order->user ?? $user;
+        $data = $request->validate([
+            'method' => ['required', 'string', 'in:qris,va_bsi,va_jateng,va_mandiri,gopay,dana,tempo_b2b'],
+            'use_points' => ['nullable', 'boolean'],
+        ]);
 
-                if (! empty($data['use_points']) && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
-                    $maxDiscount = (int) floor($order->subtotal * 0.5);
-                    $redeemed = $orderOwner->redeemLoyaltyPoints(
-                        (int) $orderOwner->loyalty_points,
-                        $maxDiscount,
-                        $order->unit,
-                        $order->code,
-                        "Potongan Poin di {$order->unit->label()} #{$order->code}"
-                    );
+        $isTempoMethod = $data['method'] === 'tempo_b2b';
+        $orderOwner = $order->user ?? $user;
 
-                    if ($redeemed > 0) {
-                        $order->points_redeemed = $redeemed;
-                        $order->total = max(0, ($order->subtotal + $order->ship_fee) - $redeemed);
-                    }
-                }
+        $projectedDiscount = 0;
+        if (! empty($data['use_points']) && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
+            $maxDiscount = (int) floor($order->subtotal * 0.5);
+            $projectedDiscount = min((int) $orderOwner->loyalty_points, $maxDiscount);
+        }
+        $projectedTotal = max(0, ($order->subtotal + $order->ship_fee) - $projectedDiscount);
 
-                $ref = 'PAY-'.strtoupper(Str::random(6)).'-'.$order->code;
+        // 1. Jika metode Tempo B2B / Institusi (wajib verifikasi admin & limit mencukupi)
+        if ($isTempoMethod) {
+            if (! $user->canUseTempo($projectedTotal)) {
+                $errorMessage = (! $user->isCivitas() && ! $user->isVerifiedMitra() && ! $user->isAdmin())
+                    ? 'Metode Tempo Institusi / B2B hanya tersedia untuk akun Civitas atau Mitra yang telah diverifikasi admin.'
+                    : (! $user->tempo_approved || (int) $user->tempo_limit <= 0
+                        ? 'Status civitas/mitra tidak otomatis memberikan fasilitas kredit. Pengajuan Tempo harus disetujui admin terlebih dahulu.'
+                        : 'Limit Tempo Anda tidak mencukupi untuk pesanan ini (sisa limit: Rp '.number_format($user->remainingTempoLimit(), 0, ',', '.').').');
+
+                return back()->withErrors([
+                    'method' => $errorMessage,
+                ]);
+            }
+
+            $payment = DB::transaction(function () use ($order, $orderOwner, $data) {
+                $this->redeemOrderPoints($order, $orderOwner, ! empty($data['use_points']));
+
+                $ref = 'INV-'.strtoupper(Str::random(6)).'-'.$order->code;
                 $payment = Payment::create([
                     'order_id' => $order->id,
                     'ref' => $ref,
-                    'method' => $data['method'],
+                    'method' => 'tempo_b2b',
                     'amount' => $order->total,
-                    'status' => PaymentStatus::Success,
-                    'paid_at' => now(),
+                    'status' => PaymentStatus::Pending,
+                    'paid_at' => null,
                 ]);
-
-                if ($order->points_earned === 0 && $order->total > 0) {
-                    $earned = $orderOwner->earnLoyaltyPoints(
-                        (int) $order->total,
-                        $order->unit,
-                        $order->code,
-                        "Reward Transaksi {$order->unit->label()} #{$order->code}"
-                    );
-                    $order->points_earned = $earned;
-                }
 
                 if ($order->status === OrderStatus::Pending) {
                     $order->status = OrderStatus::Processing;
@@ -153,10 +148,6 @@ class PaymentController extends Controller
                 return $payment;
             });
 
-            $methodName = $data['method'] === 'paylater'
-                ? 'Paylater Civitas UNWAHAS'
-                : 'Tempo Institusi B2B (TOP 30 Hari)';
-
             $redirectRoute = match ($order->unit) {
                 Unit::Air => route('water.show', $order->code),
                 Unit::Food => route('food.show', $order->code),
@@ -166,7 +157,7 @@ class PaymentController extends Controller
 
             return redirect($redirectRoute)->with(
                 'success',
-                "Pembayaran {$methodName} (Ref: {$payment->ref}) berhasil! Anda memperoleh +{$order->points_earned} Buana Loyalty Points."
+                "Invoice Tempo Institusi / B2B (Ref: {$payment->ref}, TOP 30 Hari) berhasil diterbitkan. Poin loyalitas akan masuk setelah tagihan dilunasi."
             );
         }
 
@@ -176,14 +167,6 @@ class PaymentController extends Controller
                 'method' => 'Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di file .env terlebih dahulu.',
             ]);
         }
-
-        $orderOwner = $order->user ?? $user;
-        $projectedDiscount = 0;
-        if (! empty($data['use_points']) && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
-            $maxDiscount = (int) floor($order->subtotal * 0.5);
-            $projectedDiscount = min((int) $orderOwner->loyalty_points, $maxDiscount);
-        }
-        $projectedTotal = max(0, ($order->subtotal + $order->ship_fee) - $projectedDiscount);
 
         $ref = 'MID-'.strtoupper(Str::random(6)).'-'.$order->code;
         $draftPayment = new Payment([
@@ -202,21 +185,9 @@ class PaymentController extends Controller
         }
 
         DB::transaction(function () use ($order, $orderOwner, $data, $ref) {
-            if (! empty($data['use_points']) && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
-                $maxDiscount = (int) floor($order->subtotal * 0.5);
-                $redeemed = $orderOwner->redeemLoyaltyPoints(
-                    (int) $orderOwner->loyalty_points,
-                    $maxDiscount,
-                    $order->unit,
-                    $order->code,
-                    "Potongan Poin di {$order->unit->label()} #{$order->code}"
-                );
-
-                if ($redeemed > 0) {
-                    $order->points_redeemed = $redeemed;
-                    $order->total = max(0, ($order->subtotal + $order->ship_fee) - $redeemed);
-                    $order->save();
-                }
+            $this->redeemOrderPoints($order, $orderOwner, ! empty($data['use_points']));
+            if ($order->isDirty()) {
+                $order->save();
             }
 
             Payment::create([
@@ -273,6 +244,27 @@ class PaymentController extends Controller
         }
 
         return response()->json(['message' => 'OK']);
+    }
+
+    private function redeemOrderPoints(Order $order, User $orderOwner, bool $usePoints): void
+    {
+        if (! $usePoints || $order->points_redeemed !== 0 || $orderOwner->loyalty_points <= 0) {
+            return;
+        }
+
+        $maxDiscount = (int) floor($order->subtotal * 0.5);
+        $redeemed = $orderOwner->redeemLoyaltyPoints(
+            (int) $orderOwner->loyalty_points,
+            $maxDiscount,
+            $order->unit,
+            $order->code,
+            "Potongan Poin di {$order->unit->label()} #{$order->code}"
+        );
+
+        if ($redeemed > 0) {
+            $order->points_redeemed = $redeemed;
+            $order->total = max(0, ($order->subtotal + $order->ship_fee) - $redeemed);
+        }
     }
 
     private function markPaymentAsSuccess(Payment $payment, string $paymentMethod): void

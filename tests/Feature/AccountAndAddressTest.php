@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\Address;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,7 +48,10 @@ class AccountAndAddressTest extends TestCase
         $this->user->refresh();
         $this->assertEquals('Budi Unwahas', $this->user->name);
         $this->assertEquals('24101099', $this->user->campus_id);
-        $this->assertEquals(Role::Civitas, $this->user->role);
+        $this->assertEquals(Role::Customer, $this->user->role);
+        $this->assertEquals(Role::Civitas, $this->user->requested_role);
+        $this->assertEquals(VerificationStatus::Pending, $this->user->verification_status);
+        $this->assertFalse($this->user->isCivitas());
     }
 
     public function test_user_can_manage_shipping_addresses_and_set_main(): void

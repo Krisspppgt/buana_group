@@ -48,7 +48,7 @@
         <div class="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl text-xs space-y-1">
             <div class="font-bold">Midtrans Sandbox Belum Dikonfigurasi</div>
             <p class="leading-relaxed">
-                Untuk mencoba popup pembayaran Midtrans (QRIS, Virtual Account, GoPay), daftar gratis di <b>dashboard.sandbox.midtrans.com</b> lalu masukkan <code>MIDTRANS_SERVER_KEY</code> dan <code>MIDTRANS_CLIENT_KEY</code> ke file <code>.env</code>. Metode <b>Paylater Civitas / Tempo B2B</b> tetap dapat digunakan langsung.
+                Untuk mencoba popup pembayaran Midtrans (QRIS, Virtual Account, GoPay), daftar gratis di <b>dashboard.sandbox.midtrans.com</b> lalu masukkan <code>MIDTRANS_SERVER_KEY</code> dan <code>MIDTRANS_CLIENT_KEY</code> ke file <code>.env</code>. Metode <b>Tempo Institusi / B2B</b> tersedia untuk akun yang telah disetujui admin.
             </p>
         </div>
     @endif
@@ -70,6 +70,14 @@
                     Cek Status
                 </a>
             </div>
+        </div>
+    @elseif ($latestPayment && $latestPayment->status === \App\Enums\PaymentStatus::Pending && $latestPayment->method === 'tempo_b2b')
+        <div class="p-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div>
+                <span class="font-bold block">Invoice Tempo Institusi / B2B Diterbitkan ({{ $latestPayment->ref }})</span>
+                <span>Pesanan diproses dengan skema TOP maksimal 30 hari. Poin loyalitas akan masuk setelah tagihan dilunasi.</span>
+            </div>
+            <span class="px-3 py-1.5 bg-blue-100 text-blue-800 font-bold rounded-xl">Menunggu Pelunasan</span>
         </div>
     @elseif ($latestPayment && $latestPayment->status === \App\Enums\PaymentStatus::Pending)
         <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -115,7 +123,7 @@
             <div class="card space-y-4">
                 <div>
                     <h2 class="text-base font-extrabold text-gray-900">1. Pilih Metode Pembayaran Terpadu</h2>
-                    <p class="text-xs text-gray-500 mt-0.5">Mendukung QRIS, Virtual Account Bank, E-Wallet, serta Paylater khusus Mahasiswa/Pegawai UNWAHAS.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Mendukung QRIS, Virtual Account Bank, E-Wallet, serta Tempo Institusi / B2B bagi akun terverifikasi.</p>
                 </div>
 
                 {{-- A. QRIS Terpadu --}}
@@ -197,37 +205,50 @@
                     </div>
                 </div>
 
-                {{-- D. Paylater Khusus Mahasiswa/Pegawai & Tempo B2B --}}
+                {{-- D. Tempo Institusi / B2B (Disetujui Admin) & Paylater (Tahap Lanjutan) --}}
+                @php
+                    $tempoAllowed = $user->canUseTempo((int) $order->total);
+                @endphp
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Fasilitas Khusus Civitas UNWAHAS</span>
-                        @if ($user->isCivitas())
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">NIM/NIP Terverifikasi</span>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Fasilitas Tempo Institusi &amp; B2B</span>
+                        @if ($tempoAllowed)
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                Limit Tersisa: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
+                            </span>
+                        @elseif ($user->isCivitas() || $user->isVerifiedMitra())
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Perlu Persetujuan Tempo Admin</span>
                         @else
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Khusus Civitas</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Khusus Akun Terverifikasi</span>
                         @endif
                     </div>
 
-                    <label class="flex items-center justify-between p-3.5 rounded-2xl border {{ $user->isCivitas() ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer hover:border-emerald-600' : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }} transition">
+                    <label class="flex items-center justify-between p-3.5 rounded-2xl border {{ $tempoAllowed ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer hover:border-emerald-600' : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }} transition">
                         <div class="flex items-center gap-3">
-                            <input type="radio" name="method" value="paylater" onchange="selectGatewayMethod('paylater')" {{ $user->isCivitas() ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
+                            <input type="radio" name="method" value="tempo_b2b" onchange="selectGatewayMethod('tempo_b2b')" {{ $tempoAllowed ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
                             <div>
-                                <div class="text-xs font-bold text-gray-900">Paylater Civitas Mahasiswa / Pegawai</div>
-                                <div class="text-[11px] text-gray-500">Tagihan akhir bulan terintegrasi NIM/NIP ({{ $user->campus_id ?? 'Khusus Civitas' }})</div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-[#0D5A47]">0% Bunga</span>
-                    </label>
-
-                    <label class="flex items-center justify-between p-3.5 rounded-2xl border {{ $user->isCivitas() ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer hover:border-emerald-600' : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }} transition">
-                        <div class="flex items-center gap-3">
-                            <input type="radio" name="method" value="tempo_b2b" onchange="selectGatewayMethod('tempo_b2b')" {{ $user->isCivitas() ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
-                            <div>
-                                <div class="text-xs font-bold text-gray-900">Invoice Tempo Fakultas / Unit (TOP 30 Hari)</div>
-                                <div class="text-[11px] text-gray-500">Pembayaran kolektif SPK fakultas / biro kampus</div>
+                                <div class="text-xs font-bold text-gray-900">Invoice Tempo Institusi / B2B (TOP 30 Hari)</div>
+                                <div class="text-[11px] text-gray-500">
+                                    @if ($tempoAllowed)
+                                        Pembayaran kolektif SPK fakultas / mitra B2B dengan batas waktu maksimal 30 hari.
+                                    @else
+                                        Status civitas/mitra tidak otomatis memberi kredit; butuh persetujuan &amp; limit admin.
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800">TOP 30H</span>
+                    </label>
+
+                    <label class="flex items-center justify-between p-3.5 rounded-2xl border border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed transition">
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="method" value="paylater" disabled class="w-4 h-4 text-gray-400">
+                            <div>
+                                <div class="text-xs font-bold text-gray-700">Paylater Mahasiswa / Pegawai</div>
+                                <div class="text-[11px] text-gray-500">Ditunda dari fase pilot — tersedia pada tahap lanjutan melalui mitra berizin.</div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-200 text-gray-600">Tahap Lanjutan</span>
                     </label>
                 </div>
             </div>
@@ -387,8 +408,7 @@
             va_mandiri: ['Mandiri Bill Payment Virtual Account', 'Kode Perusahaan 89022 • No. VA: 89022-081234567890.'],
             gopay: ['E-Wallet GoPay Direct Link', 'Notifikasi pembayaran otomatis terhubung ke aplikasi Gojek / GoPay Anda.'],
             dana: ['E-Wallet DANA / ShopeePay', 'Pembayaran instan menggunakan saldo dompet digital terhubung.'],
-            paylater: ['Paylater Civitas Akademika UNWAHAS', 'Tagihan dicatat ke akun NIM/NIP Civitas tanpa bunga (0%) dengan jatuh tempo akhir bulan.'],
-            tempo_b2b: ['Invoice Tempo Institusi UNWAHAS (TOP 30 Hari)', 'Tagihan masuk ke rekapitulasi SPK Fakultas / Unit Kerja dengan tempo maksimal 30 hari.'],
+            tempo_b2b: ['Invoice Tempo Institusi / B2B (TOP 30 Hari)', 'Tagihan masuk ke rekapitulasi SPK Fakultas / Mitra B2B dengan batas waktu maksimal 30 hari.'],
         };
 
         if (map[method]) {

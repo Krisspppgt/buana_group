@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -97,17 +98,33 @@ class AuthController extends Controller
         $rawName = $request->input('name', $request->input('fullName', $request->input('full-name')));
         $rawEmail = $request->input('email', $request->input('email-address'));
         $rawPhone = $request->input('phone', $request->input('whatsapp', $request->input('phone-number')));
-        $rawCampusId = $request->input('campus_id', $request->input('idNumber', $request->input('academic-id')));
+        $rawCampusId = trim((string) $request->input('campus_id', $request->input('idNumber', $request->input('academic-id'))));
+        $rawFaculty = trim((string) $request->input('faculty', ''));
+        $rawCompanyName = trim((string) $request->input('company_name', ''));
+        $rawPosition = trim((string) $request->input('position', ''));
         $rawPassword = $request->input('password');
         $rawPasswordConfirm = $request->input('password_confirmation', $request->input('passwordConfirm', $request->input('password-confirm')));
 
         $normalizedPhone = $this->normalizePhone($rawPhone);
 
+        $requestedRole = match ($request->input('role_register')) {
+            'unwahas', 'campus', 'civitas' => Role::Civitas,
+            'instansi', 'b2b', 'mitra' => Role::Coordinator,
+            default => null,
+        };
+
+        if ($requestedRole === null && $rawCampusId !== '') {
+            $requestedRole = Role::Civitas;
+        }
+
         $request->merge([
             'name' => $rawName,
             'email' => $rawEmail,
             'phone' => $normalizedPhone,
-            'campus_id' => $rawCampusId,
+            'campus_id' => $rawCampusId !== '' ? $rawCampusId : null,
+            'faculty' => $rawFaculty !== '' ? $rawFaculty : null,
+            'company_name' => $rawCompanyName !== '' ? $rawCompanyName : null,
+            'position' => $rawPosition !== '' ? $rawPosition : null,
             'password' => $rawPassword,
             'password_confirmation' => $rawPasswordConfirm,
         ]);
@@ -116,31 +133,48 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:40'],
             'email' => ['required', 'email', 'max:50', 'unique:users,email'],
             'phone' => ['required', 'regex:/^08\d{8,12}$/', 'unique:users,phone'],
-            'campus_id' => ['nullable', 'string', 'max:20'],
+            'campus_id' => $requestedRole === Role::Civitas
+                ? ['required', 'string', 'max:20']
+                : ['nullable', 'string', 'max:20'],
+            'faculty' => $requestedRole === Role::Civitas
+                ? ['required', 'string', 'max:80']
+                : ['nullable', 'string', 'max:80'],
+            'company_name' => $requestedRole === Role::Coordinator
+                ? ['required', 'string', 'max:100']
+                : ['nullable', 'string', 'max:100'],
+            'position' => $requestedRole === Role::Coordinator
+                ? ['required', 'string', 'max:60']
+                : ['nullable', 'string', 'max:60'],
             'password' => $this->passwordRules(confirmed: true),
         ], $this->messages());
 
-        $roleValue = match ($request->input('role_register')) {
-            'unwahas', 'campus', 'civitas' => Role::Civitas,
-            'instansi', 'b2b', 'mitra' => Role::Coordinator,
-            default => Role::Customer,
-        };
+        $isRequestingVerification = $requestedRole !== null;
 
-        if (! empty($data['campus_id']) && $roleValue === Role::Customer) {
-            $roleValue = Role::Civitas;
-        }
-
+        // Semua pendaftar langsung dapat login & bertransaksi reguler (Lunas/DP) sebagai Customer;
+        // hak akses khusus Civitas/Mitra aktif setelah diverifikasi admin.
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
-            'campus_id' => $data['campus_id'] ?? null,
+            'campus_id' => $requestedRole === Role::Civitas ? $data['campus_id'] : null,
+            'faculty' => $requestedRole === Role::Civitas ? $data['faculty'] : null,
+            'company_name' => $requestedRole === Role::Coordinator ? $data['company_name'] : null,
+            'position' => $requestedRole === Role::Coordinator ? $data['position'] : null,
             'password' => $data['password'],
-            'role' => $roleValue,
+            'role' => Role::Customer,
+            'requested_role' => $requestedRole,
+            'verification_status' => $isRequestingVerification ? VerificationStatus::Pending : VerificationStatus::None,
         ]);
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        if ($isRequestingVerification) {
+            return redirect('/')->with(
+                'info',
+                "Akun berhasil dibuat. Anda sudah dapat memesan layanan reguler (Lunas/DP); pengajuan status {$requestedRole->label()} sedang menunggu verifikasi admin."
+            );
+        }
 
         return redirect('/');
     }
@@ -160,9 +194,9 @@ class AuthController extends Controller
         $p = preg_replace('/\D+/', '', (string) $phone);
 
         if (str_starts_with($p, '62')) {
-            $p = '0' . substr($p, 2);
+            $p = '0'.substr($p, 2);
         } elseif (str_starts_with($p, '8')) {
-            $p = '0' . $p;
+            $p = '0'.$p;
         }
 
         return $p;
@@ -204,6 +238,10 @@ class AuthController extends Controller
     {
         return [
             'required' => ':attribute wajib diisi.',
+            'campus_id.required' => 'NIM / NIP wajib diisi untuk pengajuan akun Civitas.',
+            'faculty.required' => 'Fakultas / Unit Kerja wajib dipilih untuk pengajuan akun Civitas.',
+            'company_name.required' => 'Nama Instansi / Lembaga wajib diisi untuk pengajuan akun Mitra.',
+            'position.required' => 'Jabatan PIC wajib diisi untuk pengajuan akun Mitra.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar.',
             'phone.regex' => 'Format nomor HP/WhatsApp tidak valid (contoh: 081234567890).',

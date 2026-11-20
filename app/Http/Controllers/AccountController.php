@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Role;
+use App\Enums\VerificationStatus;
 use App\Models\Address;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,21 +39,61 @@ class AccountController extends Controller
             'email' => ['required', 'email', 'max:50', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['required', 'regex:/^08\d{8,12}$/', Rule::unique('users', 'phone')->ignore($user->id)],
             'campus_id' => ['nullable', 'string', 'max:20'],
+            'faculty' => ['nullable', 'string', 'max:80'],
+            'company_name' => ['nullable', 'string', 'max:100'],
+            'position' => ['nullable', 'string', 'max:60'],
             'password' => ['nullable', 'string', 'min:8', 'max:72', 'confirmed'],
         ], [
             'phone.regex' => 'Format nomor WhatsApp harus diawali 08 (contoh: 081234567890).',
             'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
+        $newCampusId = filled($data['campus_id'] ?? null) ? trim((string) $data['campus_id']) : null;
+        $newFaculty = filled($data['faculty'] ?? null) ? trim((string) $data['faculty']) : null;
+        $newCompanyName = filled($data['company_name'] ?? null) ? trim((string) $data['company_name']) : null;
+        $newPosition = filled($data['position'] ?? null) ? trim((string) $data['position']) : null;
+
         $updateData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
-            'campus_id' => $data['campus_id'] ?? null,
+            'campus_id' => $newCampusId,
+            'faculty' => $newFaculty,
+            'company_name' => $newCompanyName,
+            'position' => $newPosition,
         ];
 
-        if (! empty($data['campus_id']) && $user->role === Role::Customer) {
-            $updateData['role'] = Role::Civitas;
+        $needsVerificationMessage = false;
+
+        if ($user->role === Role::Customer || $user->role === Role::Civitas) {
+            $campusChanged = $newCampusId !== $user->campus_id;
+
+            if ($newCampusId !== null && ($campusChanged || $user->role === Role::Customer)) {
+                $updateData['role'] = Role::Customer;
+                $updateData['requested_role'] = Role::Civitas;
+                $updateData['verification_status'] = VerificationStatus::Pending;
+                $updateData['verification_note'] = null;
+                $updateData['verified_at'] = null;
+                $updateData['tempo_approved'] = false;
+                $updateData['tempo_limit'] = 0;
+                $needsVerificationMessage = true;
+            } elseif ($newCampusId === null && $campusChanged) {
+                $updateData['role'] = Role::Customer;
+                $updateData['requested_role'] = null;
+                $updateData['verification_status'] = VerificationStatus::None;
+                $updateData['verification_note'] = null;
+                $updateData['verified_at'] = null;
+                $updateData['tempo_approved'] = false;
+                $updateData['tempo_limit'] = 0;
+            }
+        }
+
+        if ($user->role === Role::Customer && ! $needsVerificationMessage && $newCompanyName !== null && $newCompanyName !== $user->company_name) {
+            $updateData['requested_role'] = Role::Coordinator;
+            $updateData['verification_status'] = VerificationStatus::Pending;
+            $updateData['verification_note'] = null;
+            $updateData['verified_at'] = null;
+            $needsVerificationMessage = true;
         }
 
         if (! empty($data['password'])) {
@@ -61,7 +102,11 @@ class AccountController extends Controller
 
         $user->update($updateData);
 
-        return back()->with('success', 'Profil akun berhasil diperbarui.');
+        $message = $needsVerificationMessage
+            ? 'Profil disimpan. Pengajuan verifikasi akun khusus sedang menunggu persetujuan admin.'
+            : 'Profil akun berhasil diperbarui.';
+
+        return back()->with('success', $message);
     }
 
     /**
