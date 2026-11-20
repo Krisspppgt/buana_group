@@ -55,16 +55,17 @@ class MidtransService
 
         $response = Http::withBasicAuth($serverKey, '')
             ->acceptJson()
-            ->timeout(30)
-            ->connectTimeout(15)
+            ->timeout(8)
+            ->connectTimeout(5)
             ->withOptions($this->httpOptions())
             ->get($this->coreApiBaseUrl()."/v2/{$orderId}/status");
 
-        if (! $response->successful()) {
-            return null;
-        }
+        $json = $response->json();
 
-        return $response->json();
+        return is_array($json) ? $json : [
+            'status_code' => (string) $response->status(),
+            'status_message' => $response->body() !== '' ? substr($response->body(), 0, 200) : 'Empty response from Midtrans',
+        ];
     }
 
     /**
@@ -144,7 +145,7 @@ class MidtransService
      */
     private function httpOptions(): array
     {
-        $options = ['force_ip_resolve' => 'v4'];
+        $options = [];
         $caBundle = $this->resolveCaBundle();
 
         if ($caBundle !== null) {

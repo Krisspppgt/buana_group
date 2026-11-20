@@ -85,7 +85,7 @@
                 <span class="font-bold block">Transaksi Menunggu Pembayaran ({{ $latestPayment->ref }})</span>
                 <span>Silakan selesaikan pembayaran di aplikasi bank/e-wallet atau tekan tombol Cek Status setelah membayar.</span>
             </div>
-            <a href="{{ route('payment.checkout', $order->code) }}" class="px-3.5 py-2 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700">
+            <a href="{{ route('payment.checkout', ['code' => $order->code, 'cek_status' => 1]) }}" class="px-3.5 py-2 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700">
                 Cek Status Pembayaran
             </a>
         </div>
@@ -108,9 +108,37 @@
                     </p>
                 @endif
             </div>
-            <div class="text-left sm:text-right">
-                <span class="text-xs text-emerald-200 block">Total Dibayar</span>
-                <span class="text-2xl font-black">Rp {{ number_format($latestPayment->amount, 0, ',', '.') }}</span>
+            <div class="text-left sm:text-right space-y-2">
+                <div>
+                    <span class="text-xs text-emerald-200 block">Total Dibayar</span>
+                    <span class="text-2xl font-black">Rp {{ number_format($latestPayment->amount, 0, ',', '.') }}</span>
+                </div>
+                <a href="{{ route('payment.invoice', $order->code) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-900 font-bold text-xs rounded-xl hover:bg-emerald-50 shadow-sm">
+                    📄 Lihat / Cetak Invoice
+                </a>
+            </div>
+        </div>
+    @elseif ($order->status === \App\Enums\OrderStatus::Done)
+        <div class="bg-gradient-to-r from-emerald-900 to-teal-800 text-white rounded-2xl p-6 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/30 text-emerald-200 text-xs font-bold">
+                    PESANAN SELESAI
+                </span>
+                <h2 class="text-lg font-extrabold">Pesanan #{{ $order->code }}</h2>
+                @if ($order->points_earned > 0)
+                    <p class="text-xs text-amber-300 font-bold pt-1">
+                        +{{ number_format($order->points_earned, 0, ',', '.') }} Buana Loyalty Points telah ditambahkan ke akun Anda.
+                    </p>
+                @endif
+            </div>
+            <div class="text-left sm:text-right space-y-2">
+                <div>
+                    <span class="text-xs text-emerald-200 block">Total Tagihan</span>
+                    <span class="text-2xl font-black">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
+                </div>
+                <a href="{{ route('payment.invoice', $order->code) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-900 font-bold text-xs rounded-xl hover:bg-emerald-50 shadow-sm">
+                    📄 Lihat / Cetak Invoice
+                </a>
             </div>
         </div>
     @endif
@@ -427,11 +455,21 @@
                 return;
             }
             window.snap.pay(token, {
-                onSuccess: function () {
-                    window.location.href = @json(route('payment.checkout', $order->code));
+                onSuccess: function (result) {
+                    fetch(@json(route('payment.snap-confirm', $order->code)), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @json(csrf_token()),
+                        },
+                        body: JSON.stringify(result || {}),
+                    }).finally(function () {
+                        window.location.href = @json(route('payment.checkout', ['code' => $order->code, 'cek_status' => 1]));
+                    });
                 },
                 onPending: function () {
-                    window.location.href = @json(route('payment.checkout', $order->code));
+                    window.location.href = @json(route('payment.checkout', ['code' => $order->code, 'cek_status' => 1]));
                 },
                 onError: function () {
                     alert('Pembayaran gagal atau dibatalkan.');

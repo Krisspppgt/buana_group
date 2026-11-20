@@ -235,9 +235,18 @@
                 <div style="color: #b45309; font-size: 0.75rem;">Bayar via QRIS, Virtual Account, E-Wallet, atau Tempo B2B terverifikasi</div>
             @endif
         </div>
-        <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $paidRecord ? '#0D5A47' : ($pendingTempo ? '#1d4ed8' : '#d97706') }};">
-            {{ $paidRecord ? '📄 Bukti Pembayaran' : ($pendingTempo ? '📄 Detail Tagihan' : '💳 Bayar / Tukar Poin') }}
-        </a>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            @if ($paidRecord || $pendingTempo || $order->status === \App\Enums\OrderStatus::Done)
+                <a href="{{ route('payment.invoice', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: #0D5A47; text-decoration: none;">
+                    📄 Lihat Invoice
+                </a>
+            @endif
+            @if (! $paidRecord && $order->status !== \App\Enums\OrderStatus::Done)
+                <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $pendingTempo ? '#1d4ed8' : '#d97706' }}; text-decoration: none;">
+                    {{ $pendingTempo ? '📄 Detail Tagihan' : '💳 Bayar / Tukar Poin' }}
+                </a>
+            @endif
+        </div>
     </div>
 </div>
 

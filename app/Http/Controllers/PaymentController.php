@@ -31,31 +31,11 @@ class PaymentController extends Controller
             ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
 
-        $latestPayment = $order->payments()->latest('id')->first();
+        $syncMessage = null;
+        $latestPayment = $this->syncPendingMidtransPayment($order, $midtrans, $syncMessage);
 
-        // Sinkronisasi status otomatis dari Midtrans API jika pembayaran masih Pending
-        if (
-            $latestPayment
-            && $latestPayment->status === PaymentStatus::Pending
-            && str_starts_with($latestPayment->ref, 'MID-')
-            && $midtrans->isConfigured()
-        ) {
-            $remote = $midtrans->getTransactionStatus($latestPayment->ref);
-            if (is_array($remote)) {
-                $txStatus = (string) ($remote['transaction_status'] ?? '');
-                $fraudStatus = (string) ($remote['fraud_status'] ?? '');
-                $isPaid = $txStatus === 'settlement'
-                    || ($txStatus === 'capture' && ($fraudStatus === '' || $fraudStatus === 'accept'));
-
-                if ($isPaid) {
-                    $this->markPaymentAsSuccess($latestPayment, (string) ($remote['payment_type'] ?? $latestPayment->method));
-                    $latestPayment->refresh();
-                    $order->refresh();
-                } elseif (in_array($txStatus, ['deny', 'cancel', 'expire'], true)) {
-                    $latestPayment->update(['status' => PaymentStatus::Failed]);
-                    $latestPayment->refresh();
-                }
-            }
+        if ($request->boolean('cek_status') && $syncMessage !== null) {
+            session()->flash('info', $syncMessage);
         }
 
         $maxRedeemablePoints = min((int) $user->loyalty_points, (int) floor($order->subtotal * 0.5));
@@ -289,21 +269,159 @@ class PaymentController extends Controller
             if ($order) {
                 if ($order->status === OrderStatus::Pending) {
                     $order->status = OrderStatus::Processing;
+                    $order->save();
                 }
 
-                if ($order->points_earned === 0 && $order->total > 0 && $order->user) {
-                    $earned = $order->user->earnLoyaltyPoints(
-                        (int) $order->total,
-                        $order->unit,
-                        $order->code,
-                        "Reward Transaksi {$order->unit->label()} #{$order->code}"
-                    );
-                    $order->points_earned = $earned;
-                }
-
-                $order->save();
+                $order->awardLoyaltyPoints();
             }
         });
+    }
+
+    private function syncPendingMidtransPayment(Order $order, MidtransService $midtrans, ?string &$syncMessage = null): ?Payment
+    {
+        $successPayment = $order->payments()
+            ->where('status', PaymentStatus::Success)
+            ->latest('id')
+            ->first();
+
+        if ($successPayment) {
+            return $successPayment;
+        }
+
+        $pendingMidtransPayments = $order->payments()
+            ->where('status', PaymentStatus::Pending)
+            ->where('ref', 'like', 'MID-%')
+            ->latest('id')
+            ->get();
+
+        $latestPayment = $order->payments()->latest('id')->first();
+
+        if ($pendingMidtransPayments->isEmpty() || ! $midtrans->isConfigured()) {
+            return $latestPayment;
+        }
+
+        $lastStatusNote = null;
+
+        foreach ($pendingMidtransPayments as $pendingPayment) {
+            try {
+                $remote = $midtrans->getTransactionStatus($pendingPayment->ref);
+            } catch (Throwable $e) {
+                $lastStatusNote = 'Gagal menghubungi server Midtrans (koneksi timeout). Jika pembayaran sudah berhasil di Midtrans, Admin dapat menekan "Konfirmasi Lunas" di menu Pesanan.';
+
+                break;
+            }
+
+            if (! is_array($remote)) {
+                continue;
+            }
+
+            $txStatus = (string) ($remote['transaction_status'] ?? '');
+            $fraudStatus = (string) ($remote['fraud_status'] ?? '');
+            $apiStatusCode = (string) ($remote['status_code'] ?? '');
+            $apiMessage = (string) ($remote['status_message'] ?? '');
+
+            $isPaid = $txStatus === 'settlement'
+                || ($txStatus === 'capture' && ($fraudStatus === '' || $fraudStatus === 'accept'));
+
+            if ($isPaid) {
+                $this->markPaymentAsSuccess($pendingPayment, (string) ($remote['payment_type'] ?? $pendingPayment->method));
+                $pendingPayment->refresh();
+                $order->refresh();
+                $syncMessage = "Pembayaran ({$pendingPayment->ref}) berhasil dikonfirmasi lunas oleh Midtrans! Buana Loyalty Points telah ditambahkan.";
+
+                return $pendingPayment;
+            }
+
+            if (in_array($txStatus, ['deny', 'cancel', 'expire'], true)) {
+                $pendingPayment->update(['status' => PaymentStatus::Failed]);
+                $lastStatusNote = "Transaksi ({$pendingPayment->ref}) berstatus {$txStatus} di Midtrans.";
+            } elseif ($txStatus !== '') {
+                $lastStatusNote = "Status transaksi {$pendingPayment->ref} di Midtrans masih {$txStatus}.";
+            } elseif ($apiStatusCode !== '') {
+                $lastStatusNote = "Respon Midtrans untuk {$pendingPayment->ref} ({$apiStatusCode}): {$apiMessage}";
+            }
+        }
+
+        $syncMessage = $lastStatusNote
+            ?? 'Transaksi belum tercatat lunas di Midtrans. Pastikan pembayaran di popup/simulator Midtrans sudah diselesaikan.';
+
+        return $order->payments()->latest('id')->first();
+    }
+
+    /**
+     * Menerima hasil callback onSuccess dari Midtrans Snap JS di browser.
+     */
+    public function confirmSnap(Request $request, string $code, MidtransService $midtrans): JsonResponse
+    {
+        $user = $request->user();
+
+        $order = Order::with(['payments', 'user'])
+            ->where('code', $code)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        $data = $request->validate([
+            'order_id' => ['required', 'string', 'max:100'],
+            'transaction_status' => ['required', 'string', 'max:40'],
+            'payment_type' => ['nullable', 'string', 'max:40'],
+            'fraud_status' => ['nullable', 'string', 'max:40'],
+            'gross_amount' => ['nullable', 'numeric'],
+        ]);
+
+        $payment = $order->payments()->where('ref', $data['order_id'])->firstOrFail();
+
+        if ($payment->status === PaymentStatus::Success) {
+            return response()->json(['status' => 'already_paid']);
+        }
+
+        // Prioritaskan verifikasi langsung ke Midtrans Core API
+        try {
+            $remote = $midtrans->getTransactionStatus($payment->ref);
+            if (is_array($remote) && isset($remote['transaction_status'])) {
+                $txStatus = (string) $remote['transaction_status'];
+                $fraudStatus = (string) ($remote['fraud_status'] ?? '');
+                if ($txStatus === 'settlement' || ($txStatus === 'capture' && ($fraudStatus === '' || $fraudStatus === 'accept'))) {
+                    $this->markPaymentAsSuccess($payment, (string) ($remote['payment_type'] ?? $payment->method));
+
+                    return response()->json(['status' => 'paid']);
+                }
+            }
+        } catch (Throwable) {
+            // Jika server lokal timeout ke api.sandbox.midtrans.com pada mode Sandbox, izinkan konfirmasi dari Snap callback
+            $isSandboxSuccess = ! $midtrans->isProduction()
+                && in_array($data['transaction_status'], ['settlement', 'capture'], true)
+                && ((int) ($data['gross_amount'] ?? $payment->amount) === (int) $payment->amount);
+
+            if ($isSandboxSuccess) {
+                $this->markPaymentAsSuccess($payment, (string) ($data['payment_type'] ?? $payment->method));
+
+                return response()->json(['status' => 'paid_sandbox_fallback']);
+            }
+        }
+
+        return response()->json(['status' => 'pending']);
+    }
+
+    /**
+     * Menampilkan halaman Invoice resmi pesanan yang dapat dicetak atau disimpan sebagai PDF.
+     */
+    public function invoice(Request $request, string $code, MidtransService $midtrans): View
+    {
+        $user = $request->user();
+
+        $order = Order::with(['items.product', 'payments', 'user'])
+            ->where('code', $code)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        $syncMessage = null;
+        $latestPayment = $this->syncPendingMidtransPayment($order, $midtrans, $syncMessage);
+
+        if ($request->boolean('cek_status') && $syncMessage !== null) {
+            session()->flash('info', $syncMessage);
+        }
+
+        return view('payment.invoice', compact('order', 'latestPayment'));
     }
 
     /**

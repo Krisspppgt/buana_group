@@ -8,6 +8,7 @@ use App\Enums\ProductionStage;
 use App\Enums\Unit;
 use App\Filament\Resources\Orders\Pages\ManageOrders;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\ProductionLog;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -293,16 +294,7 @@ class OrderResource extends Resource
                                 'paid_at' => now(),
                             ]);
 
-                            if ($record->points_earned === 0 && $record->total > 0 && $record->user) {
-                                $earned = $record->user->earnLoyaltyPoints(
-                                    (int) $record->total,
-                                    $record->unit,
-                                    $record->code,
-                                    "Reward Pelunasan Tempo {$record->unit->label()} #{$record->code}"
-                                );
-                                $record->points_earned = $earned;
-                                $record->save();
-                            }
+                            $record->awardLoyaltyPoints('Reward Pelunasan Tempo');
                         });
 
                         Notification::make()
@@ -311,6 +303,59 @@ class OrderResource extends Resource
                             ->success()
                             ->send();
                     }),
+
+                Action::make('markPaid')
+                    ->label('Konfirmasi Lunas')
+                    ->icon('heroicon-o-credit-card')
+                    ->color('info')
+                    ->visible(fn (Order $record): bool => $record->status !== OrderStatus::Cancelled
+                        && $record->payments()->where('status', PaymentStatus::Success)->doesntExist()
+                        && $record->payments()->where('method', 'tempo_b2b')->where('status', PaymentStatus::Pending)->doesntExist())
+                    ->requiresConfirmation()
+                    ->action(function (Order $record): void {
+                        DB::transaction(function () use ($record): void {
+                            $pendingPayment = $record->payments()
+                                ->where('status', PaymentStatus::Pending)
+                                ->latest('id')
+                                ->first();
+
+                            if ($pendingPayment) {
+                                $pendingPayment->update([
+                                    'status' => PaymentStatus::Success,
+                                    'paid_at' => now(),
+                                ]);
+                            } else {
+                                Payment::create([
+                                    'order_id' => $record->id,
+                                    'ref' => 'MANUAL-'.$record->code,
+                                    'method' => 'manual',
+                                    'amount' => $record->total,
+                                    'status' => PaymentStatus::Success,
+                                    'paid_at' => now(),
+                                ]);
+                            }
+
+                            if ($record->status === OrderStatus::Pending) {
+                                $record->status = OrderStatus::Processing;
+                                $record->save();
+                            }
+
+                            $record->awardLoyaltyPoints();
+                        });
+
+                        Notification::make()
+                            ->title('Pembayaran Dikonfirmasi Lunas')
+                            ->body("Pembayaran order {$record->code} telah ditandai lunas dan poin loyalitas telah diberikan.")
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('invoice')
+                    ->label('Invoice')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->url(fn (Order $record): string => route('payment.invoice', $record->code))
+                    ->openUrlInNewTab(),
 
                 Action::make('markDone')
                     ->label('Selesaikan')

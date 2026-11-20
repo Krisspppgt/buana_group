@@ -144,6 +144,9 @@
 @endauth
 
 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <a href="{{ route('payment.invoice', $order->code) }}" class="btn" style="background:#0f766e; text-decoration:none; flex: 1;">
+        📄 Lihat / Cetak Invoice
+    </a>
     <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="background:#0D5A47; text-decoration:none; flex: 1;">
         💳 Payment Gateway & Tukar Poin (Rp {{ number_format($order->total, 0, ',', '.') }})
     </a>
