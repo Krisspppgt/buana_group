@@ -97,6 +97,13 @@ class PaymentController extends Controller
             ]);
         }
 
+        if ($order->payments()->where('status', PaymentStatus::Success)->exists()
+            || $order->payments()->where('method', 'tempo_b2b')->where('status', PaymentStatus::Pending)->exists()) {
+            return back()->withErrors([
+                'method' => 'Pesanan ini sudah lunas atau sudah memiliki invoice Tempo yang aktif.',
+            ]);
+        }
+
         $data = $request->validate([
             'method' => ['required', 'string', 'in:qris,va_bsi,va_jateng,va_mandiri,gopay,dana,tempo_b2b'],
             'use_points' => ['nullable', 'boolean'],

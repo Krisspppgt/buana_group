@@ -122,6 +122,7 @@ class UserResource extends Resource
 
                 Toggle::make('tempo_approved')
                     ->label('Setujui Fasilitas Tempo (TOP 30 Hari)')
+                    ->live()
                     ->default(false),
 
                 TextInput::make('tempo_limit')
@@ -129,7 +130,9 @@ class UserResource extends Resource
                     ->numeric()
                     ->prefix('Rp')
                     ->default(0)
-                    ->minValue(0),
+                    ->minValue(fn ($get): int => $get('tempo_approved') ? 1 : 0)
+                    ->required(fn ($get): bool => (bool) $get('tempo_approved'))
+                    ->helperText('Wajib lebih dari Rp 0 jika fasilitas Tempo diaktifkan.'),
 
                 Textarea::make('verification_note')
                     ->label('Catatan Verifikasi Admin')
@@ -258,13 +261,16 @@ class UserResource extends Resource
                             ->required(),
                         Toggle::make('approve_tempo')
                             ->label('Sekaligus Setujui Fasilitas Tempo (TOP 30 Hari)')
+                            ->live()
                             ->default(false),
                         TextInput::make('tempo_limit')
                             ->label('Limit Kredit / Tempo (Rp)')
                             ->numeric()
                             ->prefix('Rp')
                             ->default(0)
-                            ->minValue(0),
+                            ->minValue(fn ($get): int => $get('approve_tempo') ? 1 : 0)
+                            ->required(fn ($get): bool => (bool) $get('approve_tempo'))
+                            ->helperText('Isi nominal limit > 0 bila fasilitas Tempo diaktifkan.'),
                         Textarea::make('note')
                             ->label('Catatan Verifikasi (Opsional)')
                             ->maxLength(255),

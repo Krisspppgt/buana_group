@@ -105,7 +105,12 @@ class PaymentAndLoyaltyTest extends TestCase
         $this->assertEquals(0, $order->points_earned); // Poin masuk setelah tagihan tempo dilunasi
         $this->assertEquals(500000, $this->civitas->fresh()->remainingTempoLimit());
 
-        // 4. Pesanan melebihi sisa limit tempo diblokir
+        // 4. Pesanan yang sama tidak bisa diajukan Tempo dua kali
+        $this->actingAs($this->civitas)
+            ->post(route('payment.process', $order->code), ['method' => 'tempo_b2b'])
+            ->assertSessionHasErrors('method');
+
+        // 5. Pesanan melebihi sisa limit tempo diblokir
         $secondOrder = Order::create([
             'code' => Order::newCode(),
             'user_id' => $this->civitas->id,
