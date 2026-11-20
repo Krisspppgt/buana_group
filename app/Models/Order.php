@@ -16,6 +16,7 @@ class Order extends Model
         'code', 'user_id', 'unit', 'status', 'subtotal', 'ship_fee',
         'points_redeemed', 'total', 'points_earned',
         'ship_name', 'ship_phone', 'ship_addr', 'note', 'send_at',
+        'confirmed_at', 'admin_note',
     ];
 
     protected static function booted(): void
@@ -46,6 +47,7 @@ class Order extends Model
             'unit' => Unit::class,
             'status' => OrderStatus::class,
             'send_at' => 'datetime',
+            'confirmed_at' => 'datetime',
         ];
     }
 

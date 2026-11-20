@@ -51,6 +51,7 @@ class OrderResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         return (string) static::getModel()::whereIn('status', [
+            OrderStatus::WaitingConfirmation,
             OrderStatus::Pending,
             OrderStatus::Paid,
             OrderStatus::Processing,
@@ -89,6 +90,7 @@ class OrderResource extends Resource
                 Select::make('status')
                     ->label('Status Pesanan')
                     ->options([
+                        OrderStatus::WaitingConfirmation->value => OrderStatus::WaitingConfirmation->label(),
                         OrderStatus::Pending->value => OrderStatus::Pending->label(),
                         OrderStatus::Paid->value => OrderStatus::Paid->label(),
                         OrderStatus::Processing->value => OrderStatus::Processing->label(),
@@ -192,6 +194,7 @@ class OrderResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (OrderStatus $state): string => $state->label())
                     ->color(fn (OrderStatus $state): string => match ($state) {
+                        OrderStatus::WaitingConfirmation => 'warning',
                         OrderStatus::Pending => 'warning',
                         OrderStatus::Paid => 'info',
                         OrderStatus::Processing => 'primary',
@@ -216,6 +219,7 @@ class OrderResource extends Resource
                 SelectFilter::make('status')
                     ->label('Status Pesanan')
                     ->options([
+                        OrderStatus::WaitingConfirmation->value => OrderStatus::WaitingConfirmation->label(),
                         OrderStatus::Pending->value => OrderStatus::Pending->label(),
                         OrderStatus::Paid->value => OrderStatus::Paid->label(),
                         OrderStatus::Processing->value => OrderStatus::Processing->label(),
@@ -225,6 +229,77 @@ class OrderResource extends Resource
                     ]),
             ])
             ->recordActions([
+                Action::make('confirmOrder')
+                    ->label('Konfirmasi & Buka Bayar')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (Order $record): bool => $record->status === OrderStatus::WaitingConfirmation)
+                    ->schema(fn (Order $record): array => [
+                        TextInput::make('subtotal')
+                            ->label('Subtotal Final (Rp)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default($record->subtotal)
+                            ->required()
+                            ->minValue(0),
+                        TextInput::make('ship_fee')
+                            ->label('Biaya Pengiriman Final (Rp)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default($record->ship_fee)
+                            ->required()
+                            ->minValue(0),
+                        Textarea::make('admin_note')
+                            ->label('Catatan Admin untuk Pemesan (Opsional)')
+                            ->placeholder('Contoh: Kapasitas vendor tersedia, jadwal kirim pukul 08.30 WIB.')
+                            ->maxLength(255),
+                    ])
+                    ->action(function (Order $record, array $data): void {
+                        $subtotal = (int) $data['subtotal'];
+                        $shipFee = (int) $data['ship_fee'];
+                        $total = max(0, ($subtotal + $shipFee) - (int) $record->points_redeemed);
+
+                        $record->update([
+                            'subtotal' => $subtotal,
+                            'ship_fee' => $shipFee,
+                            'total' => $total,
+                            'status' => OrderStatus::Pending,
+                            'confirmed_at' => now(),
+                            'admin_note' => $data['admin_note'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Pesanan Dikonfirmasi')
+                            ->body("Pesanan {$record->code} siap dibayar oleh pelanggan (Total: Rp ".number_format($total, 0, ',', '.').').')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('rejectOrder')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Order $record): bool => $record->status === OrderStatus::WaitingConfirmation)
+                    ->schema([
+                        Textarea::make('admin_note')
+                            ->label('Alasan Penolakan')
+                            ->placeholder('Contoh: Kapasitas vendor penuh pada tanggal acara tersebut.')
+                            ->required()
+                            ->maxLength(255),
+                    ])
+                    ->action(function (Order $record, array $data): void {
+                        $record->update([
+                            'status' => OrderStatus::Cancelled,
+                            'admin_note' => $data['admin_note'],
+                        ]);
+
+                        Notification::make()
+                            ->title('Pesanan Ditolak')
+                            ->body("Pesanan {$record->code} telah dibatalkan.")
+                            ->warning()
+                            ->send();
+                    }),
+
                 Action::make('updateProduction')
                     ->label('Update Produksi')
                     ->icon('heroicon-o-wrench-screwdriver')

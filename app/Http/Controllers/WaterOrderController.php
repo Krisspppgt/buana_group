@@ -60,6 +60,7 @@ class WaterOrderController extends Controller
 
             $subtotal = 0;
             $itemsData = [];
+            $isBulkOrder = $data['order_type'] === 'bulk';
 
             foreach ($selectedItems as $productId => $qty) {
                 $product = $productModels->get($productId);
@@ -68,6 +69,10 @@ class WaterOrderController extends Controller
                 }
 
                 $qty = (int) $qty;
+                if ($qty >= ($product->bulk_min ?: 10)) {
+                    $isBulkOrder = true;
+                }
+
                 $unitPrice = $product->priceFor($user, $qty);
                 $subtotal += ($unitPrice * $qty);
 
@@ -83,7 +88,7 @@ class WaterOrderController extends Controller
             if ($data['order_type'] === 'subscription') {
                 $cycle = $data['subscription_cycle'] ?? 'Mingguan';
                 $notePrefix = "[Langganan Rutin: {$cycle}] ";
-            } elseif ($data['order_type'] === 'bulk') {
+            } elseif ($data['order_type'] === 'bulk' || $isBulkOrder) {
                 $eventDate = $data['event_date'] ? " (Tgl Acara: {$data['event_date']})" : '';
                 $notePrefix = "[B2B Bulk Order Acara Kampus{$eventDate}] ";
             }
@@ -92,7 +97,7 @@ class WaterOrderController extends Controller
                 'code' => Order::newCode(),
                 'user_id' => $user->id,
                 'unit' => Unit::Air,
-                'status' => OrderStatus::Processing, // langsung diproses armada simulasi
+                'status' => $isBulkOrder ? OrderStatus::WaitingConfirmation : OrderStatus::Pending,
                 'subtotal' => $subtotal,
                 'ship_fee' => 0, // Bebas ongkir area kampus & mitra
                 'total' => $subtotal,
@@ -110,8 +115,13 @@ class WaterOrderController extends Controller
             return $order;
         });
 
-        return redirect()->route('water.show', $order->code)
-            ->with('success', 'Pesanan Air Mineral berhasil dibuat! Armada sedang disiapkan.');
+        if ($order->status === OrderStatus::WaitingConfirmation) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->with('info', 'Pesanan borongan Air Mineral berhasil diajukan! Silakan tunggu konfirmasi admin sebelum melakukan pembayaran.');
+        }
+
+        return redirect()->route('payment.checkout', $order->code)
+            ->with('success', 'Pesanan Air Mineral berhasil dibuat! Silakan selesaikan pembayaran.');
     }
 
     /**

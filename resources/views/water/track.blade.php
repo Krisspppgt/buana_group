@@ -219,10 +219,14 @@
     @php
         $paidRecord = $order->payments()->where('status', \App\Enums\PaymentStatus::Success)->latest('id')->first();
         $pendingTempo = $order->payments()->where('method', 'tempo_b2b')->where('status', \App\Enums\PaymentStatus::Pending)->latest('id')->first();
+        $isWaitingAdmin = $order->status === \App\Enums\OrderStatus::WaitingConfirmation;
     @endphp
     <div style="margin-top: 12px; padding: 12px; border-radius: 12px; background: {{ $paidRecord ? '#ecfdf5' : ($pendingTempo ? '#eff6ff' : '#fffbeb') }}; border: 1px solid {{ $paidRecord ? '#a7f3d0' : ($pendingTempo ? '#bfdbfe' : '#fde68a') }}; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
         <div style="font-size: 0.8rem;">
-            @if ($paidRecord)
+            @if ($isWaitingAdmin)
+                <b style="color: #92400e;">⏳ Menunggu Konfirmasi Admin</b>
+                <div style="color: #b45309; font-size: 0.75rem;">Pesanan borongan sedang dicek stok &amp; biaya kirim final sebelum pembayaran dibuka</div>
+            @elseif ($paidRecord)
                 <b style="color: #065f46;">✅ Lunas via {{ strtoupper($paidRecord->method) }} ({{ $paidRecord->ref }})</b>
                 @if ($order->points_earned > 0)
                     <div style="color: #047857; font-size: 0.75rem;">🪙 Reward: +{{ number_format($order->points_earned, 0, ',', '.') }} Buana Loyalty Points</div>
@@ -236,15 +240,21 @@
             @endif
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            @if ($paidRecord || $pendingTempo || $order->status === \App\Enums\OrderStatus::Done)
-                <a href="{{ route('payment.invoice', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: #0D5A47; text-decoration: none;">
-                    📄 Lihat Invoice
+            @if ($isWaitingAdmin)
+                <a href="{{ route('order.waiting-confirmation', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: #d97706; text-decoration: none;">
+                    ⏳ Cek Status Konfirmasi
                 </a>
-            @endif
-            @if (! $paidRecord && $order->status !== \App\Enums\OrderStatus::Done)
-                <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $pendingTempo ? '#1d4ed8' : '#d97706' }}; text-decoration: none;">
-                    {{ $pendingTempo ? '📄 Detail Tagihan' : '💳 Bayar / Tukar Poin' }}
-                </a>
+            @else
+                @if ($paidRecord || $pendingTempo || $order->status === \App\Enums\OrderStatus::Done)
+                    <a href="{{ route('payment.invoice', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: #0D5A47; text-decoration: none;">
+                        📄 Lihat Invoice
+                    </a>
+                @endif
+                @if (! $paidRecord && $order->status !== \App\Enums\OrderStatus::Done)
+                    <a href="{{ route('payment.checkout', $order->code) }}" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.8rem; background: {{ $pendingTempo ? '#1d4ed8' : '#d97706' }}; text-decoration: none;">
+                        {{ $pendingTempo ? '📄 Detail Tagihan' : '💳 Bayar / Tukar Poin' }}
+                    </a>
+                @endif
             @endif
         </div>
     </div>

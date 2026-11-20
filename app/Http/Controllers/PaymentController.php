@@ -22,7 +22,7 @@ class PaymentController extends Controller
     /**
      * Menampilkan halaman Checkout Payment Gateway Terpadu (Midtrans Snap + Tempo B2B/Institusi) & Tukar Poin.
      */
-    public function checkout(Request $request, string $code, MidtransService $midtrans): View
+    public function checkout(Request $request, string $code, MidtransService $midtrans): View|RedirectResponse
     {
         $user = $request->user();
 
@@ -30,6 +30,16 @@ class PaymentController extends Controller
             ->where('code', $code)
             ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
+
+        if ($order->status === OrderStatus::WaitingConfirmation) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->with('info', 'Pesanan borongan Anda sedang menunggu konfirmasi admin sebelum pembayaran dapat dilakukan.');
+        }
+
+        if ($order->status === OrderStatus::Cancelled) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->withErrors(['order' => 'Pesanan ini telah dibatalkan dan tidak dapat dibayar.']);
+        }
 
         $syncMessage = null;
         $latestPayment = $this->syncPendingMidtransPayment($order, $midtrans, $syncMessage);
@@ -70,6 +80,16 @@ class PaymentController extends Controller
             ->where('code', $code)
             ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
+
+        if ($order->status === OrderStatus::WaitingConfirmation) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->withErrors(['order' => 'Pembayaran belum dapat dilakukan sebelum pesanan dikonfirmasi oleh admin.']);
+        }
+
+        if ($order->status === OrderStatus::Cancelled) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->withErrors(['order' => 'Pesanan ini telah dibatalkan dan tidak dapat dibayar.']);
+        }
 
         if ($request->input('method') === 'paylater') {
             return back()->withErrors([
@@ -359,6 +379,16 @@ class PaymentController extends Controller
             ->where('code', $code)
             ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
+
+        if ($order->status === OrderStatus::WaitingConfirmation) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->withErrors(['order' => 'Pembayaran belum dapat dilakukan sebelum pesanan dikonfirmasi oleh admin.']);
+        }
+
+        if ($order->status === OrderStatus::Cancelled) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->withErrors(['order' => 'Pesanan ini telah dibatalkan dan tidak dapat dibayar.']);
+        }
 
         $data = $request->validate([
             'order_id' => ['required', 'string', 'max:100'],

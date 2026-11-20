@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FoodServiceController;
 use App\Http\Controllers\KonveksiController;
+use App\Http\Controllers\OrderConfirmationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\TicketingController;
@@ -124,6 +125,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/tracking/{code}', [KonveksiController::class, 'tracking'])->name('tracking');
         Route::post('/tracking/{code}/stage', [KonveksiController::class, 'updateStage'])->name('tracking.stage');
     });
+
+    // Halaman Menunggu Konfirmasi Admin (Pesanan Borongan / B2B sebelum pembayaran)
+    Route::get('/pesanan/{code}/menunggu-konfirmasi', [OrderConfirmationController::class, 'show'])
+        ->name('order.waiting-confirmation');
+    Route::post('/pesanan/{code}/batalkan', [OrderConfirmationController::class, 'cancel'])
+        ->name('order.cancel-waiting');
 
     // Fitur Pendukung Ekosistem: Payment Gateway Terpadu & Buana Loyalty Points
     Route::get('/pembayaran/{code}', [PaymentController::class, 'checkout'])->name('payment.checkout');

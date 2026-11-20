@@ -70,7 +70,8 @@ class WaterOrderTest extends TestCase
         $this->assertEquals(36000, $order->total); // 2 * 18000
         $this->assertCount(1, $order->items);
 
-        $response->assertRedirect(route('water.show', $order->code));
+        $this->assertEquals(OrderStatus::Pending, $order->status);
+        $response->assertRedirect(route('payment.checkout', $order->code));
     }
 
     public function test_civitas_user_gets_civitas_pricing(): void

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderStatus;
 use App\Enums\Role;
 use App\Enums\Unit;
 use App\Models\Order;
@@ -74,6 +75,7 @@ class FoodServiceTest extends TestCase
         $this->assertEquals(250000, $order->total); // 10 * 25000
         $this->assertStringContainsString('Seminar Nasional Hukum', $order->note);
 
-        $response->assertRedirect(route('food.show', $order->code));
+        $this->assertEquals(OrderStatus::Pending, $order->status);
+        $response->assertRedirect(route('payment.checkout', $order->code));
     }
 }

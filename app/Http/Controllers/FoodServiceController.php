@@ -62,6 +62,8 @@ class FoodServiceController extends Controller
 
             $subtotal = 0;
             $itemsData = [];
+            $totalQty = 0;
+            $isBulkOrder = false;
 
             foreach ($selectedItems as $productId => $qty) {
                 $product = $productModels->get($productId);
@@ -70,6 +72,11 @@ class FoodServiceController extends Controller
                 }
 
                 $qty = (int) $qty;
+                $totalQty += $qty;
+                if ($qty >= ($product->bulk_min ?: 30)) {
+                    $isBulkOrder = true;
+                }
+
                 $unitPrice = $product->priceFor($user, $qty);
                 $subtotal += ($unitPrice * $qty);
 
@@ -78,6 +85,10 @@ class FoodServiceController extends Controller
                     'qty' => $qty,
                     'price' => $unitPrice,
                 ];
+            }
+
+            if ($totalQty >= 30) {
+                $isBulkOrder = true;
             }
 
             // Gabungkan catatan rundown acara dan preferensi diet
@@ -93,7 +104,7 @@ class FoodServiceController extends Controller
                 'code' => Order::newCode(),
                 'user_id' => $user->id,
                 'unit' => Unit::Food,
-                'status' => OrderStatus::Processing,
+                'status' => $isBulkOrder ? OrderStatus::WaitingConfirmation : OrderStatus::Pending,
                 'subtotal' => $subtotal,
                 'ship_fee' => 0,
                 'total' => $subtotal,
@@ -111,8 +122,13 @@ class FoodServiceController extends Controller
             return $order;
         });
 
-        return redirect()->route('food.show', $order->code)
-            ->with('success', 'Pesanan katering berhasil dijadwalkan! Tim dapur siap memproses sesuai rundown.');
+        if ($order->status === OrderStatus::WaitingConfirmation) {
+            return redirect()->route('order.waiting-confirmation', $order->code)
+                ->with('info', 'Pesanan katering borongan berhasil diajukan! Menunggu pemeriksaan kapasitas vendor & konfirmasi admin sebelum pembayaran.');
+        }
+
+        return redirect()->route('payment.checkout', $order->code)
+            ->with('success', 'Pesanan katering berhasil dibuat! Silakan selesaikan pembayaran.');
     }
 
     /**
