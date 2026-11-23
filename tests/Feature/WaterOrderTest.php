@@ -71,7 +71,37 @@ class WaterOrderTest extends TestCase
         $this->assertCount(1, $order->items);
 
         $this->assertEquals(OrderStatus::Pending, $order->status);
+        $this->assertEquals(98, $this->product->fresh()->stock);
         $response->assertRedirect(route('payment.checkout', $order->code));
+    }
+
+    public function test_water_order_fails_and_rolls_back_when_stock_is_insufficient(): void
+    {
+        $secondProduct = Product::create([
+            'unit' => Unit::Air,
+            'name' => 'Air Mineral Gelas 220ml',
+            'info' => 'Dus isi 48 cup',
+            'price' => 25000,
+            'stock' => 3,
+            'uom' => 'dus',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->user)->post(route('water.store'), [
+            'order_type' => 'regular',
+            'products' => [
+                $this->product->id => 5,
+                $secondProduct->id => 4,
+            ],
+            'ship_name' => 'Budi Santoso',
+            'ship_phone' => '087712345678',
+            'ship_addr' => 'Gedung Rektorat Lt 2',
+        ]);
+
+        $response->assertSessionHasErrors('products');
+        $this->assertSame(0, Order::count());
+        $this->assertEquals(100, $this->product->fresh()->stock);
+        $this->assertEquals(3, $secondProduct->fresh()->stock);
     }
 
     public function test_civitas_user_gets_civitas_pricing(): void

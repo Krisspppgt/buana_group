@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class Order extends Model
 {
@@ -23,6 +24,21 @@ class Order extends Model
     {
         static::updated(function (Order $order): void {
             if (! $order->wasChanged('status')) {
+                return;
+            }
+
+            if ($order->status === OrderStatus::Cancelled) {
+                $rawOriginalStatus = $order->getRawOriginal('status');
+                $previousStatus = match (true) {
+                    $rawOriginalStatus instanceof OrderStatus => $rawOriginalStatus,
+                    $rawOriginalStatus !== null => OrderStatus::tryFrom((int) $rawOriginalStatus),
+                    default => null,
+                };
+
+                if ($previousStatus !== OrderStatus::Cancelled) {
+                    $order->restoreItemStocks();
+                }
+
                 return;
             }
 
@@ -114,6 +130,114 @@ class Order extends Model
             }
 
             return $earned;
+        });
+    }
+
+    /**
+     * Memvalidasi dan mengurangi stok produk secara atomik di dalam transaksi order.
+     *
+     * @param  array<int|string, int|string|null>  $selectedItems
+     * @return array{
+     *     items: list<array{product_id: int, qty: int, price: int}>,
+     *     subtotal: int,
+     *     total_qty: int,
+     *     has_bulk_item: bool,
+     * }
+     *
+     * @throws ValidationException
+     */
+    public static function reserveItems(User $user, Unit $unit, array $selectedItems, int $defaultBulkMin): array
+    {
+        $productIds = array_map('intval', array_keys($selectedItems));
+        sort($productIds);
+
+        $productModels = Product::whereIn('id', $productIds)
+            ->where('unit', $unit)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        $subtotal = 0;
+        $totalQty = 0;
+        $hasBulkItem = false;
+        $items = [];
+
+        foreach ($selectedItems as $productId => $qty) {
+            $qty = (int) $qty;
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $product = $productModels->get((int) $productId);
+            if (! $product) {
+                throw ValidationException::withMessages([
+                    'products' => 'Produk yang dipilih tidak tersedia atau sudah nonaktif.',
+                ]);
+            }
+
+            if ($product->stock < $qty) {
+                throw ValidationException::withMessages([
+                    'products' => "Stok {$product->name} tidak mencukupi (tersisa {$product->stock} {$product->uom}).",
+                ]);
+            }
+
+            $product->decrement('stock', $qty);
+
+            if ($qty >= ($product->bulk_min ?: $defaultBulkMin)) {
+                $hasBulkItem = true;
+            }
+
+            $unitPrice = $product->priceFor($user, $qty);
+            $subtotal += ($unitPrice * $qty);
+            $totalQty += $qty;
+
+            $items[] = [
+                'product_id' => $product->id,
+                'qty' => $qty,
+                'price' => $unitPrice,
+            ];
+        }
+
+        if (empty($items)) {
+            throw ValidationException::withMessages([
+                'products' => 'Pilih minimal satu produk dengan jumlah lebih dari 0.',
+            ]);
+        }
+
+        return [
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'total_qty' => $totalQty,
+            'has_bulk_item' => $hasBulkItem,
+        ];
+    }
+
+    /**
+     * Mengembalikan stok produk sesuai daftar item pada order yang dibatalkan.
+     */
+    public function restoreItemStocks(): void
+    {
+        $items = $this->items()->get();
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        DB::transaction(function () use ($items): void {
+            $productIds = $items->pluck('product_id')->unique()->sort()->values()->all();
+            $products = Product::whereIn('id', $productIds)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($items as $item) {
+                $product = $products->get($item->product_id);
+                if ($product && $item->qty > 0) {
+                    $product->increment('stock', (int) $item->qty);
+                }
+            }
         });
     }
 }

@@ -56,32 +56,10 @@ class WaterOrderController extends Controller
         }
 
         $order = DB::transaction(function () use ($user, $data, $selectedItems) {
-            $productModels = Product::whereIn('id', array_keys($selectedItems))->get()->keyBy('id');
-
-            $subtotal = 0;
-            $itemsData = [];
-            $isBulkOrder = $data['order_type'] === 'bulk';
-
-            foreach ($selectedItems as $productId => $qty) {
-                $product = $productModels->get($productId);
-                if (! $product) {
-                    continue;
-                }
-
-                $qty = (int) $qty;
-                if ($qty >= ($product->bulk_min ?: 10)) {
-                    $isBulkOrder = true;
-                }
-
-                $unitPrice = $product->priceFor($user, $qty);
-                $subtotal += ($unitPrice * $qty);
-
-                $itemsData[] = [
-                    'product_id' => $product->id,
-                    'qty' => $qty,
-                    'price' => $unitPrice,
-                ];
-            }
+            $reserved = Order::reserveItems($user, Unit::Air, $selectedItems, 10);
+            $subtotal = $reserved['subtotal'];
+            $itemsData = $reserved['items'];
+            $isBulkOrder = $data['order_type'] === 'bulk' || $reserved['has_bulk_item'];
 
             // Keterangan khusus jika langganan atau B2B Bulk Order
             $notePrefix = '';

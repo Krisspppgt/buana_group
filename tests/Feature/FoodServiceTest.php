@@ -76,6 +76,28 @@ class FoodServiceTest extends TestCase
         $this->assertStringContainsString('Seminar Nasional Hukum', $order->note);
 
         $this->assertEquals(OrderStatus::Pending, $order->status);
+        $this->assertEquals(490, $this->foodProduct->fresh()->stock);
         $response->assertRedirect(route('payment.checkout', $order->code));
+    }
+
+    public function test_food_order_fails_when_stock_is_insufficient(): void
+    {
+        $this->foodProduct->update(['stock' => 5]);
+
+        $response = $this->actingAs($this->user)->post(route('food.store'), [
+            'products' => [
+                $this->foodProduct->id => 10,
+            ],
+            'event_name' => 'Seminar Nasional Hukum',
+            'send_at' => now()->addDays(2)->format('Y-m-d\TH:i'),
+            'diet_pref' => 'Reguler',
+            'ship_name' => 'Panitia Konsumsi',
+            'ship_phone' => '087799887766',
+            'ship_addr' => 'Auditorium Unwahas Lt 2',
+        ]);
+
+        $response->assertSessionHasErrors('products');
+        $this->assertSame(0, Order::count());
+        $this->assertEquals(5, $this->foodProduct->fresh()->stock);
     }
 }

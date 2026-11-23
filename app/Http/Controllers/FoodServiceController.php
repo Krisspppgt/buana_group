@@ -58,38 +58,10 @@ class FoodServiceController extends Controller
         }
 
         $order = DB::transaction(function () use ($user, $data, $selectedItems) {
-            $productModels = Product::whereIn('id', array_keys($selectedItems))->get()->keyBy('id');
-
-            $subtotal = 0;
-            $itemsData = [];
-            $totalQty = 0;
-            $isBulkOrder = false;
-
-            foreach ($selectedItems as $productId => $qty) {
-                $product = $productModels->get($productId);
-                if (! $product) {
-                    continue;
-                }
-
-                $qty = (int) $qty;
-                $totalQty += $qty;
-                if ($qty >= ($product->bulk_min ?: 30)) {
-                    $isBulkOrder = true;
-                }
-
-                $unitPrice = $product->priceFor($user, $qty);
-                $subtotal += ($unitPrice * $qty);
-
-                $itemsData[] = [
-                    'product_id' => $product->id,
-                    'qty' => $qty,
-                    'price' => $unitPrice,
-                ];
-            }
-
-            if ($totalQty >= 30) {
-                $isBulkOrder = true;
-            }
+            $reserved = Order::reserveItems($user, Unit::Food, $selectedItems, 30);
+            $subtotal = $reserved['subtotal'];
+            $itemsData = $reserved['items'];
+            $isBulkOrder = $reserved['has_bulk_item'] || $reserved['total_qty'] >= 30;
 
             // Gabungkan catatan rundown acara dan preferensi diet
             $rundownNote = "[Acara: {$data['event_name']} | Diet: {$data['diet_pref']}]";

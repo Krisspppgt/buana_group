@@ -155,4 +155,57 @@ class BulkOrderConfirmationTest extends TestCase
             ->get(route('payment.checkout', $order->code))
             ->assertRedirect(route('order.waiting-confirmation', $order->code));
     }
+
+    public function test_cancelling_order_restores_reserved_product_stock_once(): void
+    {
+        $this->actingAs($this->user)->post(route('water.store'), [
+            'order_type' => 'bulk',
+            'products' => [
+                $this->waterProduct->id => 15,
+            ],
+            'ship_name' => 'Panitia Seminar',
+            'ship_phone' => '087755667788',
+            'ship_addr' => 'Auditorium UNWAHAS',
+            'event_date' => now()->addDays(3)->format('Y-m-d'),
+        ]);
+
+        $order = Order::where('user_id', $this->user->id)->firstOrFail();
+        $this->assertEquals(185, $this->waterProduct->fresh()->stock);
+
+        $this->actingAs($this->user)
+            ->post(route('order.cancel-waiting', $order->code))
+            ->assertRedirect();
+
+        $this->assertEquals(OrderStatus::Cancelled, $order->fresh()->status);
+        $this->assertEquals(200, $this->waterProduct->fresh()->stock);
+
+        // Repeated update while already Cancelled must not double-restore stock
+        $order->fresh()->update(['admin_note' => 'Catatan tambahan']);
+        $this->assertEquals(200, $this->waterProduct->fresh()->stock);
+    }
+
+    public function test_admin_rejecting_bulk_order_restores_reserved_stock(): void
+    {
+        $this->actingAs($this->user)->post(route('food.store'), [
+            'products' => [
+                $this->foodProduct->id => 40,
+            ],
+            'event_name' => 'Rapat Senat Fakultas',
+            'send_at' => now()->addDays(2)->format('Y-m-d\TH:i'),
+            'diet_pref' => 'Reguler',
+            'ship_name' => 'Sekretariat Fakultas',
+            'ship_phone' => '087755667788',
+            'ship_addr' => 'Gedung Dekanat Lt 1',
+        ]);
+
+        $order = Order::where('user_id', $this->user->id)->firstOrFail();
+        $this->assertEquals(460, $this->foodProduct->fresh()->stock);
+
+        $order->update([
+            'status' => OrderStatus::Cancelled,
+            'admin_note' => 'Kapasitas vendor penuh.',
+        ]);
+
+        $this->assertEquals(500, $this->foodProduct->fresh()->stock);
+    }
 }
