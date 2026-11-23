@@ -370,6 +370,9 @@
                                                 <div class="flex items-center gap-1.5 flex-wrap">
                                                     <span class="font-mono font-extrabold text-[#0D5A47]">{{ $voucher->code }}</span>
                                                     <span class="px-1.5 py-0.5 rounded-md bg-emerald-100 text-[#0D5A47] text-[10px] font-bold">{{ $voucher->formattedValue() }}</span>
+                                                    @if ($voucher->internal_only)
+                                                        <span class="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">Khusus Internal</span>
+                                                    @endif
                                                 </div>
                                                 <div class="text-[11px] font-semibold text-gray-800 truncate">{{ $voucher->name }}</div>
                                                 <div class="text-[10px] text-gray-500">
@@ -386,7 +389,7 @@
                                             @if ($isApplied)
                                                 <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold shrink-0">Dipakai</span>
                                             @elseif ($meetsMinSubtotal)
-                                                <button type="button" onclick="applyQuickVoucher(@json($voucher->code))" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-[#0D5A47] text-[11px] font-bold cursor-pointer transition shrink-0">
+                                                <button type="button" data-voucher-code="{{ $voucher->code }}" onclick="applyQuickVoucher(this.dataset.voucherCode)" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-[#0D5A47] text-[11px] font-bold cursor-pointer transition shrink-0">
                                                     Pakai
                                                 </button>
                                             @else

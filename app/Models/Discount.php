@@ -24,6 +24,7 @@ class Discount extends Model
         'max_discount',
         'min_subtotal',
         'unit',
+        'internal_only',
         'quota',
         'used_count',
         'max_uses_per_user',
@@ -46,6 +47,7 @@ class Discount extends Model
         return [
             'type' => DiscountType::class,
             'unit' => Unit::class,
+            'internal_only' => 'boolean',
             'value' => 'integer',
             'max_discount' => 'integer',
             'min_subtotal' => 'integer',

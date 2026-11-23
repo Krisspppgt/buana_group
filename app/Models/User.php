@@ -81,6 +81,21 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === Role::Civitas;
     }
 
+    /**
+     * Member internal mencakup Civitas Akademika (Mahasiswa/Dosen/Pegawai) serta staf/admin internal,
+     * tidak termasuk Pelanggan Umum maupun Mitra/Koordinator B2B.
+     */
+    public function isInternalMember(): bool
+    {
+        return in_array($this->role, [
+            Role::Civitas,
+            Role::Courier,
+            Role::Operator,
+            Role::Admin,
+            Role::SuperAdmin,
+        ], true);
+    }
+
     public function isVerifiedMitra(): bool
     {
         return $this->role === Role::Coordinator;

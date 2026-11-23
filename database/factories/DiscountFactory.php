@@ -28,6 +28,7 @@ class DiscountFactory extends Factory
             'max_discount' => 25000,
             'min_subtotal' => 0,
             'unit' => null,
+            'internal_only' => false,
             'quota' => 100,
             'used_count' => 0,
             'max_uses_per_user' => 1,
@@ -50,6 +51,13 @@ class DiscountFactory extends Factory
     {
         return $this->state(fn (): array => [
             'is_active' => false,
+        ]);
+    }
+
+    public function internalOnly(): static
+    {
+        return $this->state(fn (): array => [
+            'internal_only' => true,
         ]);
     }
 }

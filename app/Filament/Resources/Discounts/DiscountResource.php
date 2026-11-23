@@ -145,6 +145,11 @@ class DiscountResource extends Resource
                     ->maxLength(160)
                     ->columnSpanFull(),
 
+                Toggle::make('internal_only')
+                    ->label('Khusus Member Internal')
+                    ->helperText('Jika aktif, hanya berlaku untuk Civitas Akademika & Staf internal (bukan Pelanggan Umum / Mitra B2B).')
+                    ->default(false),
+
                 Toggle::make('is_active')
                     ->label('Aktifkan Voucher')
                     ->default(true),
@@ -187,6 +192,12 @@ class DiscountResource extends Resource
                         default => 'gray',
                     }),
 
+                TextColumn::make('internal_only')
+                    ->label('Target')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Member Internal' : 'Semua Pengguna')
+                    ->color(fn (bool $state): string => $state ? 'warning' : 'gray'),
+
                 TextColumn::make('used_count')
                     ->label('Pemakaian')
                     ->sortable()
@@ -226,6 +237,9 @@ class DiscountResource extends Resource
                         DiscountType::Percentage->value => DiscountType::Percentage->label(),
                         DiscountType::Fixed->value => DiscountType::Fixed->label(),
                     ]),
+
+                TernaryFilter::make('internal_only')
+                    ->label('Khusus Member Internal'),
 
                 TernaryFilter::make('is_active')
                     ->label('Status Aktif'),

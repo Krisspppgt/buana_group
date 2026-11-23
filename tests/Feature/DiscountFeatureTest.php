@@ -294,4 +294,76 @@ class DiscountFeatureTest extends TestCase
         $this->assertEquals(PaymentStatus::Success, $payment->status);
         $this->assertEquals(0, $payment->amount);
     }
+
+    public function test_internal_only_discount_is_restricted_to_internal_members(): void
+    {
+        Discount::factory()->fixed(20000)->internalOnly()->create([
+            'name' => 'Promo Khusus Civitas',
+            'code' => 'INTERNAL20K',
+        ]);
+
+        // 1. Pelanggan Umum tidak melihat voucher & ditolak jika ketik manual
+        $publicUser = User::factory()->create([
+            'role' => Role::Customer,
+            'phone' => '085512349901',
+        ]);
+        $publicOrder = $this->createOrder([
+            'user_id' => $publicUser->id,
+            'subtotal' => 100000,
+            'ship_fee' => 0,
+            'total' => 100000,
+        ]);
+
+        $this->actingAs($publicUser)
+            ->get(route('payment.checkout', $publicOrder->code))
+            ->assertOk()
+            ->assertDontSee('INTERNAL20K');
+
+        $this->actingAs($publicUser)
+            ->post(route('payment.discount.apply', $publicOrder->code), ['discount_code' => 'INTERNAL20K'])
+            ->assertSessionHasErrors('discount_code');
+
+        // 2. Koordinator / Mitra B2B juga tidak termasuk member internal
+        $this->flushSession();
+        $mitraUser = User::factory()->create([
+            'role' => Role::Coordinator,
+            'phone' => '085512349902',
+        ]);
+        $mitraOrder = $this->createOrder([
+            'user_id' => $mitraUser->id,
+            'subtotal' => 100000,
+            'ship_fee' => 0,
+            'total' => 100000,
+        ]);
+
+        $this->actingAs($mitraUser)
+            ->get(route('payment.checkout', $mitraOrder->code))
+            ->assertOk()
+            ->assertDontSee('INTERNAL20K');
+
+        $this->actingAs($mitraUser)
+            ->post(route('payment.discount.apply', $mitraOrder->code), ['discount_code' => 'INTERNAL20K'])
+            ->assertSessionHasErrors('discount_code');
+
+        // 3. Civitas Akademika melihat voucher & bisa langsung menerapkannya
+        $civitasOrder = $this->createOrder([
+            'user_id' => $this->customer->id,
+            'subtotal' => 100000,
+            'ship_fee' => 0,
+            'total' => 100000,
+        ]);
+
+        $this->actingAs($this->customer)
+            ->get(route('payment.checkout', $civitasOrder->code))
+            ->assertOk()
+            ->assertSee('INTERNAL20K')
+            ->assertSee('Khusus Internal');
+
+        $this->actingAs($this->customer)
+            ->post(route('payment.discount.apply', $civitasOrder->code), ['discount_code' => 'INTERNAL20K'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertEquals(20000, $civitasOrder->fresh()->discount_amount);
+        $this->assertEquals(80000, $civitasOrder->fresh()->total);
+    }
 }

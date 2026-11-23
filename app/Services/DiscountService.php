@@ -20,10 +20,12 @@ class DiscountService
      */
     public function availableForOrder(Order $order, User $user): Collection
     {
-        $ownerId = $order->user_id ?: $user->id;
+        $orderOwner = $order->user ?? $user;
+        $ownerId = $orderOwner->id;
 
         $discounts = Discount::query()
             ->currentlyAvailable()
+            ->when(! $orderOwner->isInternalMember(), fn ($query) => $query->where('internal_only', false))
             ->where(function ($query) use ($order): void {
                 $query->whereNull('unit')
                     ->orWhere('unit', $order->unit->value);
@@ -222,6 +224,13 @@ class DiscountService
         if ($discount->unit !== null && $discount->unit !== $order->unit) {
             throw ValidationException::withMessages([
                 'discount_code' => "Voucher ini hanya berlaku untuk unit usaha {$discount->unit->label()}.",
+            ]);
+        }
+
+        $orderOwner = $order->user ?? $user;
+        if ($discount->internal_only && ! $orderOwner->isInternalMember()) {
+            throw ValidationException::withMessages([
+                'discount_code' => 'Voucher ini hanya berlaku untuk member internal (Civitas Akademika & Staf).',
             ]);
         }
 
