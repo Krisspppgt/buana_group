@@ -308,8 +308,99 @@
             </div>
         </div>
 
-        {{-- KOLOM KANAN: TUKAR LOYALTY POINTS & RINGKASAN TAGIHAN --}}
+        {{-- KOLOM KANAN: VOUCHER DISKON, TUKAR LOYALTY POINTS & RINGKASAN TAGIHAN --}}
         <div class="unit-sticky-col space-y-4">
+            {{-- FITUR KODE PROMO / VOUCHER DISKON --}}
+            @if ($canModifyDiscount || $order->discount_amount > 0)
+                <div class="card border border-emerald-200 bg-gradient-to-br from-emerald-50/70 to-white space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-[#0D5A47] flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-900">Kode Promo / Voucher Diskon</h3>
+                                <p class="text-[11px] text-gray-500">Masukkan kode atau pilih voucher aktif yang tersedia.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($order->discount_amount > 0)
+                        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-2 text-xs">
+                            <div>
+                                <div class="font-extrabold text-[#0D5A47]">Voucher {{ $order->discount_code }} Aktif</div>
+                                <div class="text-[11px] text-emerald-700 font-semibold">Hemat Rp {{ number_format($order->discount_amount, 0, ',', '.') }}</div>
+                            </div>
+                            @if ($canModifyDiscount)
+                                <button type="submit" form="remove-discount-form" class="px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold text-[11px] cursor-pointer transition">
+                                    Hapus
+                                </button>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if ($canModifyDiscount)
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                id="discount_code_input"
+                                name="discount_code"
+                                form="apply-discount-form"
+                                value="{{ old('discount_code', '') }}"
+                                placeholder="Ketik kode promo (mis. BUANA10)"
+                                maxlength="32"
+                                class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-gray-300 bg-white text-xs font-bold uppercase tracking-wide text-gray-900 focus:outline-none focus:border-[#0D5A47]"
+                            >
+                            <button type="submit" form="apply-discount-form" class="px-4 py-2 rounded-xl bg-[#0D5A47] hover:bg-[#094234] text-white text-xs font-bold cursor-pointer transition shrink-0">
+                                Terapkan
+                            </button>
+                        </div>
+
+                        @if ($availableDiscounts->isNotEmpty())
+                            <div class="space-y-2 pt-1">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Voucher Tersedia</div>
+                                <div class="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                                    @foreach ($availableDiscounts as $voucher)
+                                        @php
+                                            $isApplied = $order->discount_id !== null && (int) $order->discount_id === (int) $voucher->id;
+                                            $meetsMinSubtotal = (int) $order->subtotal >= (int) $voucher->min_subtotal;
+                                        @endphp
+                                        <div class="p-2.5 rounded-xl border {{ $isApplied ? 'border-emerald-400 bg-emerald-50/70' : 'border-gray-200 bg-white' }} flex items-center justify-between gap-2 text-xs">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="font-mono font-extrabold text-[#0D5A47]">{{ $voucher->code }}</span>
+                                                    <span class="px-1.5 py-0.5 rounded-md bg-emerald-100 text-[#0D5A47] text-[10px] font-bold">{{ $voucher->formattedValue() }}</span>
+                                                </div>
+                                                <div class="text-[11px] font-semibold text-gray-800 truncate">{{ $voucher->name }}</div>
+                                                <div class="text-[10px] text-gray-500">
+                                                    @if ($voucher->min_subtotal > 0)
+                                                        Min. belanja Rp {{ number_format($voucher->min_subtotal, 0, ',', '.') }}
+                                                    @else
+                                                        Tanpa minimal belanja
+                                                    @endif
+                                                    @if ($voucher->expires_at)
+                                                        &bull; s/d {{ $voucher->expires_at->format('d M Y') }}
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if ($isApplied)
+                                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold shrink-0">Dipakai</span>
+                                            @elseif ($meetsMinSubtotal)
+                                                <button type="button" onclick="applyQuickVoucher(@json($voucher->code))" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-[#0D5A47] text-[11px] font-bold cursor-pointer transition shrink-0">
+                                                    Pakai
+                                                </button>
+                                            @else
+                                                <span class="px-2 py-1 rounded-lg bg-gray-100 text-gray-400 text-[10px] font-semibold shrink-0">Belum memenuhi</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            @endif
+
             {{-- FITUR BUANA LOYALTY POINTS (CROSS-SELLING) --}}
             <div class="card border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 to-yellow-50/50 space-y-3">
                 <div class="flex items-center justify-between">
@@ -377,6 +468,12 @@
                         <span>Ongkos Kirim / Logistik:</span>
                         <span class="font-bold text-emerald-700">{{ $order->ship_fee > 0 ? 'Rp '.number_format($order->ship_fee, 0, ',', '.') : 'GRATIS' }}</span>
                     </div>
+                    @if ($order->discount_amount > 0)
+                        <div class="flex justify-between text-emerald-700 font-bold">
+                            <span>Potongan Voucher ({{ $order->discount_code }}):</span>
+                            <span>-Rp {{ number_format($order->discount_amount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
                     <div id="points_discount_row" class="flex justify-between text-amber-700 font-bold" style="display: {{ $order->points_redeemed > 0 ? 'flex' : 'none' }};">
                         <span>Potongan Buana Loyalty Points:</span>
                         <span id="points_discount_display">-Rp {{ number_format($order->points_redeemed > 0 ? $order->points_redeemed : $maxRedeemablePoints, 0, ',', '.') }}</span>
@@ -400,11 +497,30 @@
             </div>
         </div>
     </form>
+
+    @if ($canModifyDiscount)
+        <form id="apply-discount-form" method="POST" action="{{ route('payment.discount.apply', $order->code) }}" class="hidden">
+            @csrf
+        </form>
+        <form id="remove-discount-form" method="POST" action="{{ route('payment.discount.remove', $order->code) }}" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endif
 </div>
 
 <script>
     const baseTotal = {{ (int) $order->total }};
     const maxRedeem = {{ (int) $maxRedeemablePoints }};
+
+    function applyQuickVoucher(code) {
+        const input = document.getElementById('discount_code_input');
+        const form = document.getElementById('apply-discount-form');
+        if (input && form) {
+            input.value = code;
+            form.submit();
+        }
+    }
 
     function recalculateWithPoints() {
         const toggle = document.getElementById('use_points_toggle');

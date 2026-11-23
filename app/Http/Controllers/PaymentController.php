@@ -8,6 +8,7 @@ use App\Enums\Unit;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\DiscountService;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,11 +23,11 @@ class PaymentController extends Controller
     /**
      * Menampilkan halaman Checkout Payment Gateway Terpadu (Midtrans Snap + Tempo B2B/Institusi) & Tukar Poin.
      */
-    public function checkout(Request $request, string $code, MidtransService $midtrans): View|RedirectResponse
+    public function checkout(Request $request, string $code, MidtransService $midtrans, DiscountService $discountService): View|RedirectResponse
     {
         $user = $request->user();
 
-        $order = Order::with(['items.product', 'payments', 'user'])
+        $order = Order::with(['items.product', 'payments', 'user', 'discount'])
             ->where('code', $code)
             ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
             ->firstOrFail();
@@ -55,8 +56,14 @@ class PaymentController extends Controller
             }
         }
 
-        $maxRedeemablePoints = min((int) $user->loyalty_points, (int) floor($order->subtotal * 0.5));
+        $subtotalAfterDiscount = max(0, (int) $order->subtotal - (int) $order->discount_amount);
+        $maxRedeemablePoints = min((int) $user->loyalty_points, (int) floor($subtotalAfterDiscount * 0.5));
         $potentialEarnedPoints = max(0, (int) floor($order->total * 0.01));
+
+        $canModifyDiscount = $discountService->canModifyOrderDiscount($order);
+        $availableDiscounts = $canModifyDiscount
+            ? $discountService->availableForOrder($order, $user)
+            : collect();
 
         $midtransConfigured = $midtrans->isConfigured();
         $midtransClientKey = (string) config('services.midtrans.client_key');
@@ -69,11 +76,55 @@ class PaymentController extends Controller
             'latestPayment',
             'maxRedeemablePoints',
             'potentialEarnedPoints',
+            'canModifyDiscount',
+            'availableDiscounts',
             'midtransConfigured',
             'midtransClientKey',
             'midtransSnapJsUrl',
             'midtransIsProduction'
         ));
+    }
+
+    /**
+     * Menerapkan kode promo / voucher diskon ke pesanan di halaman checkout.
+     */
+    public function applyDiscount(Request $request, string $code, DiscountService $discountService): RedirectResponse
+    {
+        $user = $request->user();
+
+        $order = Order::with(['payments', 'user'])
+            ->where('code', $code)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        $data = $request->validate([
+            'discount_code' => ['required', 'string', 'max:32'],
+        ], [
+            'discount_code.required' => 'Masukkan kode promo terlebih dahulu.',
+        ]);
+
+        $updatedOrder = $discountService->applyToOrder($order, $user, $data['discount_code']);
+
+        return redirect()->route('payment.checkout', $order->code)
+            ->with('success', "Voucher {$updatedOrder->discount_code} berhasil diterapkan (-Rp ".number_format($updatedOrder->discount_amount, 0, ',', '.').').');
+    }
+
+    /**
+     * Menghapus voucher diskon dari pesanan di halaman checkout.
+     */
+    public function removeDiscount(Request $request, string $code, DiscountService $discountService): RedirectResponse
+    {
+        $user = $request->user();
+
+        $order = Order::with(['payments', 'user'])
+            ->where('code', $code)
+            ->when(! $user->isAdmin() && ! $user->isStaff(), fn ($q) => $q->where('user_id', $user->id))
+            ->firstOrFail();
+
+        $discountService->removeFromOrder($order);
+
+        return redirect()->route('payment.checkout', $order->code)
+            ->with('info', 'Voucher diskon berhasil dihapus dari pesanan.');
     }
 
     /**
@@ -119,12 +170,37 @@ class PaymentController extends Controller
         $isTempoMethod = $data['method'] === 'tempo_b2b';
         $orderOwner = $order->user ?? $user;
 
-        $projectedDiscount = 0;
+        $subtotalAfterDiscount = max(0, (int) $order->subtotal - (int) $order->discount_amount);
+        $projectedPointsDiscount = (int) $order->points_redeemed;
         if (! empty($data['use_points']) && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
-            $maxDiscount = (int) floor($order->subtotal * 0.5);
-            $projectedDiscount = min((int) $orderOwner->loyalty_points, $maxDiscount);
+            $maxPointsDiscount = (int) floor($subtotalAfterDiscount * 0.5);
+            $projectedPointsDiscount = min((int) $orderOwner->loyalty_points, $maxPointsDiscount);
         }
-        $projectedTotal = max(0, ($order->subtotal + $order->ship_fee) - $projectedDiscount);
+        $projectedTotal = max(0, $subtotalAfterDiscount - $projectedPointsDiscount) + (int) $order->ship_fee;
+
+        // 0. Jika total akhir Rp 0 (misal diskon 100% + gratis ongkir), langsung lunasi tanpa gateway
+        if ($projectedTotal === 0) {
+            DB::transaction(function () use ($order, $orderOwner, $data): void {
+                $this->redeemOrderPoints($order, $orderOwner, ! empty($data['use_points']));
+                $order->recalculateTotal();
+                if ($order->status === OrderStatus::Pending) {
+                    $order->status = OrderStatus::Paid;
+                }
+                $order->save();
+
+                Payment::create([
+                    'order_id' => $order->id,
+                    'ref' => 'VCH-'.strtoupper(Str::random(6)).'-'.$order->code,
+                    'method' => 'voucher_full',
+                    'amount' => 0,
+                    'status' => PaymentStatus::Success,
+                    'paid_at' => now(),
+                ]);
+            });
+
+            return redirect()->route('payment.invoice', $order->code)
+                ->with('success', 'Pesanan berhasil dilunasi sepenuhnya menggunakan voucher diskon!');
+        }
 
         // 1. Jika metode Tempo B2B / Institusi (wajib verifikasi admin & limit mencukupi)
         if ($isTempoMethod) {
@@ -266,7 +342,8 @@ class PaymentController extends Controller
             return;
         }
 
-        $maxDiscount = (int) floor($order->subtotal * 0.5);
+        $subtotalAfterDiscount = max(0, (int) $order->subtotal - (int) $order->discount_amount);
+        $maxDiscount = (int) floor($subtotalAfterDiscount * 0.5);
         $redeemed = $orderOwner->redeemLoyaltyPoints(
             (int) $orderOwner->loyalty_points,
             $maxDiscount,
@@ -277,7 +354,7 @@ class PaymentController extends Controller
 
         if ($redeemed > 0) {
             $order->points_redeemed = $redeemed;
-            $order->total = max(0, ($order->subtotal + $order->ship_fee) - $redeemed);
+            $order->recalculateTotal();
         }
     }
 

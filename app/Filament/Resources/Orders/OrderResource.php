@@ -115,6 +115,20 @@ class OrderResource extends Resource
                     ->default(0)
                     ->required(),
 
+                TextInput::make('discount_code')
+                    ->label('Kode Voucher Diskon')
+                    ->maxLength(32)
+                    ->disabled()
+                    ->dehydrated(false),
+
+                TextInput::make('discount_amount')
+                    ->label('Potongan Diskon (Rp)')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->default(0)
+                    ->disabled()
+                    ->dehydrated(false),
+
                 TextInput::make('total')
                     ->label('Total Tagihan (Rp)')
                     ->numeric()
@@ -187,7 +201,10 @@ class OrderResource extends Resource
                     ->label('Total Tagihan')
                     ->money('IDR', locale: 'id')
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->description(fn (Order $record): ?string => $record->discount_amount > 0
+                        ? "Voucher {$record->discount_code} (-Rp ".number_format($record->discount_amount, 0, ',', '.').')'
+                        : null),
 
                 TextColumn::make('status')
                     ->label('Status')

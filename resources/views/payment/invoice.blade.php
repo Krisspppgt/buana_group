@@ -160,6 +160,12 @@
                     <span>Ongkos Kirim</span>
                     <span>Rp {{ number_format($order->ship_fee, 0, ',', '.') }}</span>
                 </div>
+                @if ($order->discount_amount > 0)
+                    <div class="flex justify-between text-emerald-700 font-semibold">
+                        <span>Potongan Voucher ({{ $order->discount_code }})</span>
+                        <span>-Rp {{ number_format($order->discount_amount, 0, ',', '.') }}</span>
+                    </div>
+                @endif
                 @if ($order->points_redeemed > 0)
                     <div class="flex justify-between text-emerald-700 font-semibold">
                         <span>Potongan Buana Points</span>

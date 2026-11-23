@@ -96,6 +96,7 @@ class FilamentAdminDashboardTest extends TestCase
         $endpoints = [
             '/admin/products',
             '/admin/orders',
+            '/admin/discounts',
             '/admin/quotes',
             '/admin/tour-packages',
             '/admin/tour-bookings',

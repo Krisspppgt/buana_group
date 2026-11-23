@@ -135,6 +135,8 @@ Route::middleware('auth')->group(function () {
 
     // Fitur Pendukung Ekosistem: Payment Gateway Terpadu & Buana Loyalty Points
     Route::get('/pembayaran/{code}', [PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('/pembayaran/{code}/diskon', [PaymentController::class, 'applyDiscount'])->name('payment.discount.apply');
+    Route::delete('/pembayaran/{code}/diskon', [PaymentController::class, 'removeDiscount'])->name('payment.discount.remove');
     Route::post('/pembayaran/{code}', [PaymentController::class, 'process'])->name('payment.process');
     Route::post('/pembayaran/{code}/konfirmasi-snap', [PaymentController::class, 'confirmSnap'])->name('payment.snap-confirm');
     Route::get('/invoice/{code}', [PaymentController::class, 'invoice'])->name('payment.invoice');

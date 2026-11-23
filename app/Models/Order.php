@@ -15,6 +15,7 @@ class Order extends Model
 {
     protected $fillable = [
         'code', 'user_id', 'unit', 'status', 'subtotal', 'ship_fee',
+        'discount_id', 'discount_code', 'discount_amount',
         'points_redeemed', 'total', 'points_earned',
         'ship_name', 'ship_phone', 'ship_addr', 'note', 'send_at',
         'confirmed_at', 'admin_note',
@@ -37,6 +38,7 @@ class Order extends Model
 
                 if ($previousStatus !== OrderStatus::Cancelled) {
                     $order->restoreItemStocks();
+                    $order->releaseDiscountQuota();
                 }
 
                 return;
@@ -79,6 +81,35 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(Discount::class);
+    }
+
+    public function recalculateTotal(): void
+    {
+        $netSubtotal = max(0, (int) $this->subtotal - (int) $this->discount_amount - (int) $this->points_redeemed);
+        $this->total = $netSubtotal + (int) $this->ship_fee;
+    }
+
+    /**
+     * Mengembalikan kuota diskon yang dipakai saat pesanan dibatalkan.
+     */
+    public function releaseDiscountQuota(): void
+    {
+        $discountId = $this->discount_id ?: static::query()->whereKey($this->id)->value('discount_id');
+        if (! $discountId) {
+            return;
+        }
+
+        DB::transaction(function () use ($discountId): void {
+            $discount = Discount::query()->lockForUpdate()->find($discountId);
+            if ($discount && $discount->used_count > 0) {
+                $discount->decrement('used_count');
+            }
+        });
     }
 
     public function items(): HasMany
