@@ -434,7 +434,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"/></svg>
                     </div>
                     <h3 class="font-bold text-sm text-slate-900 group-hover:text-[#0D5A47] transition">Buana Konveksi</h3>
-                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Jas almamater, PDH/PDL, kaos seragam & pelacakan progres jahit real-time.</p>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">Jas almamater, PDH/PDL, kaos seragam & pemantauan status produksi pesanan.</p>
                 </div>
                 <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0D5A47]">
                     <span>Buka Katalog</span>

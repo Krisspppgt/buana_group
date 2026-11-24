@@ -53,7 +53,7 @@ class PaymentAndLoyaltyTest extends TestCase
         $response->assertSee('Payment Gateway Terpadu');
         $response->assertSee('QRIS Terpadu Buana Group');
         $response->assertSee('Invoice Tempo Institusi / B2B (TOP 30 Hari)');
-        $response->assertSee('Tahap Lanjutan');
+        $response->assertDontSee('Paylater Mahasiswa / Pegawai');
         $response->assertSee('Buana Loyalty Points');
     }
 

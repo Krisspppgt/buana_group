@@ -234,7 +234,7 @@
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="text-xs font-bold text-slate-900 group-hover/item:text-[#0D5A47]">Buana Konveksi</div>
-                                        <div class="text-[11px] text-slate-500 truncate">Jas almamater, PDH/PDL & live tracking jahit</div>
+                                        <div class="text-[11px] text-slate-500 truncate">Jas almamater, PDH/PDL & status produksi</div>
                                     </div>
                                     <svg class="w-4 h-4 text-slate-300 group-hover/item:text-[#0D5A47]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                                 </a>
@@ -517,7 +517,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-slate-900 text-xs">Buana Konveksi</div>
-                        <div class="text-[10px] text-slate-500 truncate">Jas almamater, PDH & live tracking jahit</div>
+                        <div class="text-[10px] text-slate-500 truncate">Jas almamater, PDH & status produksi</div>
                     </div>
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </a>

@@ -233,7 +233,7 @@
                     </div>
                 </div>
 
-                {{-- D. Tempo Institusi / B2B (Disetujui Admin) & Paylater (Tahap Lanjutan) --}}
+                {{-- D. Tempo Institusi / B2B (Disetujui Admin) --}}
                 @php
                     $tempoAllowed = $user->canUseTempo((int) $order->total);
                 @endphp
@@ -266,17 +266,6 @@
                             </div>
                         </div>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800">TOP 30H</span>
-                    </label>
-
-                    <label class="flex items-center justify-between p-3.5 rounded-2xl border border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed transition">
-                        <div class="flex items-center gap-3">
-                            <input type="radio" name="method" value="paylater" disabled class="w-4 h-4 text-gray-400">
-                            <div>
-                                <div class="text-xs font-bold text-gray-700">Paylater Mahasiswa / Pegawai</div>
-                                <div class="text-[11px] text-gray-500">Ditunda dari fase pilot — tersedia pada tahap lanjutan melalui mitra berizin.</div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gray-200 text-gray-600">Tahap Lanjutan</span>
                     </label>
                 </div>
             </div>

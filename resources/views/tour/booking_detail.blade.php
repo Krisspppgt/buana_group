@@ -142,7 +142,6 @@
                                     <option value="QRIS Terpadu Buana">QRIS Terpadu Buana</option>
                                     <option value="VA Bank Syariah Indonesia">VA Bank Syariah (BSI)</option>
                                     <option value="VA Bank Jateng Syariah">VA Bank Jateng</option>
-                                    <option value="Potong Gaji / Paylater Civitas">Paylater / Potong Gaji Civitas</option>
                                 </select>
                             </div>
                             <div class="flex items-end">

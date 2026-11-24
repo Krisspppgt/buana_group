@@ -144,9 +144,10 @@ class WaterOrderTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('water.show', $order->code));
 
         $response->assertStatus(200);
-        $response->assertSee('Pelacakan Logistik Armada');
-        $response->assertSee('Armada Sedang Mengantar');
-        $response->assertSee('Pak Bambang Susanto');
+        $response->assertSee('Detail Pesanan Air Mineral');
+        $response->assertSee('Pesanan Diajukan');
+        $response->assertDontSee('LIVE GPS TRACKING ARMADA');
+        $response->assertDontSee('Pak Bambang Susanto');
     }
 
     public function test_courier_and_customer_can_update_water_delivery_status(): void
