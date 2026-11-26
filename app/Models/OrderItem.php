@@ -9,7 +9,7 @@ class OrderItem extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['order_id', 'product_id', 'qty', 'price'];
+    protected $fillable = ['order_id', 'product_id', 'qty', 'price', 'cost_price'];
 
     public function order(): BelongsTo
     {

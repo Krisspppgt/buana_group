@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'Operasional & Transaksi',
+                'Laporan & Keuangan',
                 'Katalog & Inventaris',
                 'Tour & Ticketing',
                 'Pengguna & Akses',

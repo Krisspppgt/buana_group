@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\Unit;
+use App\Services\StockService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -228,6 +229,7 @@ class Order extends Model
                 'product_id' => $product->id,
                 'qty' => $qty,
                 'price' => $unitPrice,
+                'cost_price' => (int) $product->cost_price,
             ];
         }
 
@@ -246,6 +248,36 @@ class Order extends Model
     }
 
     /**
+     * Mencatat mutasi stok keluar untuk item yang sudah direservasi saat order dibuat.
+     */
+    public function recordReservedStockMovements(?int $actorId = null): void
+    {
+        $stockService = app(StockService::class);
+        $items = $this->items()->with('product')->get();
+
+        foreach ($items as $item) {
+            if (! $item->product || $item->qty <= 0) {
+                continue;
+            }
+
+            $stockAfter = (int) $item->product->stock;
+            $stockBefore = $stockAfter + (int) $item->qty;
+
+            $item->product->stock = $stockBefore;
+            $stockService->stockOut(
+                product: $item->product,
+                qty: (int) $item->qty,
+                reason: 'order',
+                userId: $actorId ?? $this->user_id,
+                orderId: $this->id,
+                note: "Penjualan pesanan {$this->code}",
+                mutateProduct: false,
+            );
+            $item->product->stock = $stockAfter;
+        }
+    }
+
+    /**
      * Mengembalikan stok produk sesuai daftar item pada order yang dibatalkan.
      */
     public function restoreItemStocks(): void
@@ -255,7 +287,9 @@ class Order extends Model
             return;
         }
 
-        DB::transaction(function () use ($items): void {
+        $stockService = app(StockService::class);
+
+        DB::transaction(function () use ($items, $stockService): void {
             $productIds = $items->pluck('product_id')->unique()->sort()->values()->all();
             $products = Product::whereIn('id', $productIds)
                 ->orderBy('id')
@@ -266,7 +300,14 @@ class Order extends Model
             foreach ($items as $item) {
                 $product = $products->get($item->product_id);
                 if ($product && $item->qty > 0) {
-                    $product->increment('stock', (int) $item->qty);
+                    $stockService->stockIn(
+                        product: $product,
+                        qty: (int) $item->qty,
+                        reason: 'order_cancel',
+                        userId: null,
+                        orderId: $this->id,
+                        note: "Pembatalan pesanan {$this->code}",
+                    );
                 }
             }
         });

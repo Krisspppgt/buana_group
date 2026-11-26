@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Enums\Unit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
     public $timestamps = false;
 
     protected $fillable = [
-        'unit', 'name', 'info', 'price', 'price_civitas', 'price_bulk',
+        'unit', 'name', 'info', 'price', 'cost_price', 'price_civitas', 'price_bulk',
         'bulk_min', 'stock', 'uom', 'photo', 'is_active',
     ];
 
@@ -18,8 +19,14 @@ class Product extends Model
     {
         return [
             'unit' => Unit::class,
+            'cost_price' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
     }
 
     public function scopeActive($query)

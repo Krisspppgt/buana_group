@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     protected $fillable = [
-        'order_id', 'ref', 'method', 'amount', 'status', 'paid_at',
+        'order_id', 'ref', 'method', 'amount', 'status', 'paid_at', 'due_date',
     ];
 
     protected function casts(): array
@@ -17,6 +17,7 @@ class Payment extends Model
         return [
             'status' => PaymentStatus::class,
             'paid_at' => 'datetime',
+            'due_date' => 'datetime',
         ];
     }
 

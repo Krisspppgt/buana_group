@@ -227,6 +227,7 @@ class PaymentController extends Controller
                     'amount' => $order->total,
                     'status' => PaymentStatus::Pending,
                     'paid_at' => null,
+                    'due_date' => now()->addDays(30),
                 ]);
 
                 if ($order->status === OrderStatus::Pending) {

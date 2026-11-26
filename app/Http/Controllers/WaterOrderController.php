@@ -90,6 +90,8 @@ class WaterOrderController extends Controller
                 $order->items()->create($item);
             }
 
+            $order->recordReservedStockMovements($user->id);
+
             return $order;
         });
 

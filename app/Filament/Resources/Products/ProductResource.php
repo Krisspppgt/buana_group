@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products;
 use App\Enums\Unit;
 use App\Filament\Resources\Products\Pages\ManageProducts;
 use App\Models\Product;
+use App\Services\StockService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -86,6 +87,14 @@ class ProductResource extends Resource
                     ->minValue(0)
                     ->required(),
 
+                TextInput::make('cost_price')
+                    ->label('Harga Modal / HPP (Rp)')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->default(0)
+                    ->minValue(0)
+                    ->helperText('Digunakan untuk menghitung laba kotor pada Laporan Laba & Rugi.'),
+
                 TextInput::make('price_civitas')
                     ->label('Harga Khusus Civitas (Rp)')
                     ->numeric()
@@ -142,6 +151,12 @@ class ProductResource extends Resource
                     ->money('IDR', locale: 'id')
                     ->sortable(),
 
+                TextColumn::make('cost_price')
+                    ->label('HPP / Modal')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('price_civitas')
                     ->label('Harga Civitas')
                     ->money('IDR', locale: 'id')
@@ -185,13 +200,77 @@ class ProductResource extends Resource
                             ->default(50)
                             ->minValue(1)
                             ->required(),
+                        TextInput::make('note')
+                            ->label('Catatan / Sumber Supplier')
+                            ->placeholder('Contoh: Restok dari pabrik / PO #123')
+                            ->maxLength(200),
                     ])
                     ->action(function (Product $record, array $data): void {
-                        $record->increment('stock', (int) $data['added_stock']);
+                        app(StockService::class)->stockIn(
+                            product: $record,
+                            qty: (int) $data['added_stock'],
+                            reason: 'restock',
+                            userId: auth()->id(),
+                            note: $data['note'] ?? 'Restok manual admin',
+                        );
 
                         Notification::make()
                             ->title('Stok Gudang Diperbarui')
                             ->body("Stok {$record->name} berhasil ditambah sebanyak {$data['added_stock']} {$record->uom}.")
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('adjustStock')
+                    ->label('Opname / Keluar')
+                    ->icon('heroicon-o-minus-circle')
+                    ->color('warning')
+                    ->schema([
+                        Select::make('reason')
+                            ->label('Jenis Penyesuaian')
+                            ->options([
+                                'damaged' => 'Barang Rusak / Kedaluwarsa (Stok Keluar)',
+                                'manual_out' => 'Pengambilan Internal / Sample (Stok Keluar)',
+                                'opname' => 'Stok Opname (Set Saldo Akhir)',
+                            ])
+                            ->default('damaged')
+                            ->required(),
+                        TextInput::make('qty')
+                            ->label('Jumlah / Saldo Baru')
+                            ->numeric()
+                            ->minValue(0)
+                            ->required(),
+                        TextInput::make('note')
+                            ->label('Keterangan')
+                            ->maxLength(200),
+                    ])
+                    ->action(function (Product $record, array $data): void {
+                        $stockService = app(StockService::class);
+                        $qty = (int) $data['qty'];
+
+                        if ($data['reason'] === 'opname') {
+                            $stockService->adjust(
+                                product: $record,
+                                newStock: $qty,
+                                reason: 'opname',
+                                userId: auth()->id(),
+                                note: $data['note'] ?? 'Stok opname admin',
+                            );
+                        } else {
+                            $deduct = min($qty, (int) $record->stock);
+                            if ($deduct > 0) {
+                                $stockService->stockOut(
+                                    product: $record,
+                                    qty: $deduct,
+                                    reason: $data['reason'],
+                                    userId: auth()->id(),
+                                    note: $data['note'] ?? 'Penyesuaian stok keluar',
+                                );
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Mutasi Stok Dicatat')
+                            ->body("Stok {$record->name} kini menjadi {$record->fresh()->stock} {$record->uom}.")
                             ->success()
                             ->send();
                     }),

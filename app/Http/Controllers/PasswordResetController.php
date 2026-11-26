@@ -88,7 +88,7 @@ class PasswordResetController extends Controller
 
         $statusMsg = $result['simulated']
             ? "Mode simulasi aktif: Kode OTP untuk {$maskedTarget} telah dicatat di storage/logs/laravel.log."
-            : "Kode OTP telah dikirim melalui ".($data['channel'] === 'whatsapp' ? 'WhatsApp' : 'Gmail')." ke {$maskedTarget}.";
+            : 'Kode OTP telah dikirim melalui '.($data['channel'] === 'whatsapp' ? 'WhatsApp' : 'Gmail')." ke {$maskedTarget}.";
 
         return redirect()->route('password.verify')->with('status', $statusMsg);
     }
