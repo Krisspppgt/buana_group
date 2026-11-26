@@ -145,6 +145,7 @@ Route::middleware('auth')->group(function () {
     // Profil Akun & Buku Alamat Pengiriman
     Route::prefix('akun')->name('account.')->group(function () {
         Route::get('/', [AccountController::class, 'index'])->name('index');
+        Route::get('/tempo', [AccountController::class, 'tempo'])->name('tempo');
         Route::put('/profil', [AccountController::class, 'updateProfile'])->name('profile.update');
         Route::post('/alamat', [AccountController::class, 'storeAddress'])->name('addresses.store');
         Route::post('/alamat/{address}/utama', [AccountController::class, 'setMainAddress'])->name('addresses.main');

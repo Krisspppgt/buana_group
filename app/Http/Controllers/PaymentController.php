@@ -56,8 +56,16 @@ class PaymentController extends Controller
             }
         }
 
+        $pendingTempoPayment = $order->payments()
+            ->where('method', 'tempo_b2b')
+            ->where('status', PaymentStatus::Pending)
+            ->latest('id')
+            ->first();
+
         $subtotalAfterDiscount = max(0, (int) $order->subtotal - (int) $order->discount_amount);
-        $maxRedeemablePoints = min((int) $user->loyalty_points, (int) floor($subtotalAfterDiscount * 0.5));
+        $maxRedeemablePoints = $pendingTempoPayment
+            ? 0
+            : min((int) $user->loyalty_points, (int) floor($subtotalAfterDiscount * 0.5));
         $potentialEarnedPoints = max(0, (int) floor($order->total * 0.01));
 
         $canModifyDiscount = $discountService->canModifyOrderDiscount($order);
@@ -74,6 +82,7 @@ class PaymentController extends Controller
             'order',
             'user',
             'latestPayment',
+            'pendingTempoPayment',
             'maxRedeemablePoints',
             'potentialEarnedPoints',
             'canModifyDiscount',
@@ -155,12 +164,16 @@ class PaymentController extends Controller
             ]);
         }
 
-        if ($order->payments()->where('status', PaymentStatus::Success)->exists()
-            || $order->payments()->where('method', 'tempo_b2b')->where('status', PaymentStatus::Pending)->exists()) {
+        if ($order->payments()->where('status', PaymentStatus::Success)->exists()) {
             return back()->withErrors([
-                'method' => 'Pesanan ini sudah lunas atau sudah memiliki invoice Tempo yang aktif.',
+                'method' => 'Pesanan ini sudah lunas.',
             ]);
         }
+
+        $hasPendingTempo = $order->payments()
+            ->where('method', 'tempo_b2b')
+            ->where('status', PaymentStatus::Pending)
+            ->exists();
 
         $data = $request->validate([
             'method' => ['required', 'string', 'in:qris,va_bsi,va_jateng,va_mandiri,gopay,dana,tempo_b2b'],
@@ -168,11 +181,18 @@ class PaymentController extends Controller
         ]);
 
         $isTempoMethod = $data['method'] === 'tempo_b2b';
+        if ($hasPendingTempo && $isTempoMethod) {
+            return back()->withErrors([
+                'method' => 'Pesanan ini sudah memiliki invoice Tempo yang aktif. Silakan pilih metode pembayaran Midtrans (QRIS, Virtual Account, atau E-Wallet) untuk melunasi tagihan Tempo.',
+            ]);
+        }
+
         $orderOwner = $order->user ?? $user;
+        $allowPointRedemption = ! $hasPendingTempo && ! empty($data['use_points']);
 
         $subtotalAfterDiscount = max(0, (int) $order->subtotal - (int) $order->discount_amount);
         $projectedPointsDiscount = (int) $order->points_redeemed;
-        if (! empty($data['use_points']) && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
+        if ($allowPointRedemption && $order->points_redeemed === 0 && $orderOwner->loyalty_points > 0) {
             $maxPointsDiscount = (int) floor($subtotalAfterDiscount * 0.5);
             $projectedPointsDiscount = min((int) $orderOwner->loyalty_points, $maxPointsDiscount);
         }
@@ -180,8 +200,8 @@ class PaymentController extends Controller
 
         // 0. Jika total akhir Rp 0 (misal diskon 100% + gratis ongkir), langsung lunasi tanpa gateway
         if ($projectedTotal === 0) {
-            DB::transaction(function () use ($order, $orderOwner, $data): void {
-                $this->redeemOrderPoints($order, $orderOwner, ! empty($data['use_points']));
+            DB::transaction(function () use ($order, $orderOwner, $allowPointRedemption): void {
+                $this->redeemOrderPoints($order, $orderOwner, $allowPointRedemption);
                 $order->recalculateTotal();
                 if ($order->status === OrderStatus::Pending) {
                     $order->status = OrderStatus::Paid;
@@ -209,15 +229,17 @@ class PaymentController extends Controller
                     ? 'Metode Tempo Institusi / B2B hanya tersedia untuk akun Civitas atau Mitra yang telah diverifikasi admin.'
                     : (! $user->tempo_approved || (int) $user->tempo_limit <= 0
                         ? 'Status civitas/mitra tidak otomatis memberikan fasilitas kredit. Pengajuan Tempo harus disetujui admin terlebih dahulu.'
-                        : 'Limit Tempo Anda tidak mencukupi untuk pesanan ini (sisa limit: Rp '.number_format($user->remainingTempoLimit(), 0, ',', '.').').');
+                        : ($user->hasOverdueTempo()
+                            ? 'Anda memiliki tagihan Tempo yang telah melewati batas jatuh tempo (30 hari). Silakan lunasi tagihan tertunggak terlebih dahulu.'
+                            : 'Limit Tempo Anda tidak mencukupi untuk pesanan ini (sisa limit: Rp '.number_format($user->remainingTempoLimit(), 0, ',', '.').').'));
 
                 return back()->withErrors([
                     'method' => $errorMessage,
                 ]);
             }
 
-            $payment = DB::transaction(function () use ($order, $orderOwner, $data) {
-                $this->redeemOrderPoints($order, $orderOwner, ! empty($data['use_points']));
+            $payment = DB::transaction(function () use ($order, $orderOwner, $allowPointRedemption) {
+                $this->redeemOrderPoints($order, $orderOwner, $allowPointRedemption);
 
                 $ref = 'INV-'.strtoupper(Str::random(6)).'-'.$order->code;
                 $payment = Payment::create([
@@ -275,8 +297,8 @@ class PaymentController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($order, $orderOwner, $data, $ref) {
-            $this->redeemOrderPoints($order, $orderOwner, ! empty($data['use_points']));
+        DB::transaction(function () use ($order, $orderOwner, $data, $ref, $allowPointRedemption) {
+            $this->redeemOrderPoints($order, $orderOwner, $allowPointRedemption);
             if ($order->isDirty()) {
                 $order->save();
             }
@@ -366,12 +388,23 @@ class PaymentController extends Controller
                 $payment->update([
                     'status' => PaymentStatus::Success,
                     'paid_at' => now(),
-                    'method' => substr($paymentMethod, 0, 15),
+                    'method' => $payment->method === 'tempo_b2b' ? 'tempo_b2b' : substr($paymentMethod, 0, 15),
                 ]);
             }
 
             $order = $payment->order;
             if ($order) {
+                // Jika pembayaran ini melunasi pesanan yang memiliki invoice Tempo B2B aktif,
+                // tandai invoice Tempo tersebut sebagai Lunas agar limit kredit mitra langsung pulih
+                // dan Laporan Piutang B2B di Admin otomatis ter-update.
+                $order->payments()
+                    ->where('method', 'tempo_b2b')
+                    ->where('status', PaymentStatus::Pending)
+                    ->update([
+                        'status' => PaymentStatus::Success,
+                        'paid_at' => now(),
+                    ]);
+
                 if ($order->status === OrderStatus::Pending) {
                     $order->status = OrderStatus::Processing;
                     $order->save();

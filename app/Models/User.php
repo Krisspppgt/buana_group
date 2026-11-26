@@ -126,6 +126,43 @@ class User extends Authenticatable implements FilamentUser
             ->sum('amount');
     }
 
+    /**
+     * Menghitung jumlah invoice Tempo B2B/Institusi yang masih menunggu pelunasan.
+     */
+    public function pendingTempoCount(): int
+    {
+        return Payment::query()
+            ->where('method', 'tempo_b2b')
+            ->where('status', PaymentStatus::Pending)
+            ->whereHas('order', function ($query): void {
+                $query->where('user_id', $this->id)
+                    ->where('status', '!=', OrderStatus::Cancelled);
+            })
+            ->count();
+    }
+
+    /**
+     * Mengecek apakah akun memiliki tagihan Tempo B2B yang sudah melewati tanggal jatuh tempo (overdue).
+     */
+    public function hasOverdueTempo(): bool
+    {
+        return Payment::query()
+            ->where('method', 'tempo_b2b')
+            ->where('status', PaymentStatus::Pending)
+            ->whereHas('order', function ($query): void {
+                $query->where('user_id', $this->id)
+                    ->where('status', '!=', OrderStatus::Cancelled);
+            })
+            ->where(function ($query): void {
+                $query->where('due_date', '<', now())
+                    ->orWhere(function ($fallback): void {
+                        $fallback->whereNull('due_date')
+                            ->where('created_at', '<', now()->subDays(30));
+                    });
+            })
+            ->exists();
+    }
+
     public function remainingTempoLimit(): int
     {
         if (! $this->tempo_approved || (int) $this->tempo_limit <= 0) {
@@ -136,7 +173,7 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Status civitas atau mitra tidak otomatis memberi fasilitas kredit; Tempo hanya untuk akun yang disetujui admin dengan limit memadai.
+     * Status civitas atau mitra tidak otomatis memberi fasilitas kredit; Tempo hanya untuk akun yang disetujui admin dengan limit memadai dan tanpa tunggakan jatuh tempo.
      */
     public function canUseTempo(int $amount = 0): bool
     {
@@ -149,6 +186,10 @@ class User extends Authenticatable implements FilamentUser
         }
 
         if (! $this->tempo_approved || (int) $this->tempo_limit <= 0) {
+            return false;
+        }
+
+        if ($this->hasOverdueTempo()) {
             return false;
         }
 

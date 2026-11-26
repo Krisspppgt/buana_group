@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\Role;
 use App\Enums\VerificationStatus;
 use App\Models\Address;
+use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +28,54 @@ class AccountController extends Controller
             ->get();
 
         return view('account.index', compact('user', 'addresses'));
+    }
+
+    /**
+     * Menampilkan halaman Fasilitas Tempo B2B, rincian penggunaan limit, dan pelunasan via Midtrans.
+     */
+    public function tempo(Request $request): View
+    {
+        $user = $request->user();
+
+        $tempoPayments = Payment::with(['order.items.product', 'order.payments'])
+            ->where('method', 'tempo_b2b')
+            ->whereHas('order', function ($query) use ($user): void {
+                $query->where('user_id', $user->id)
+                    ->where('status', '!=', OrderStatus::Cancelled);
+            })
+            ->latest('id')
+            ->get();
+
+        $tempoLimit = (int) $user->tempo_limit;
+        $usedTempo = $user->usedTempoAmount();
+        $remainingTempo = $user->remainingTempoLimit();
+        $usagePercent = $tempoLimit > 0
+            ? min(100, (int) round(($usedTempo / $tempoLimit) * 100))
+            : 0;
+
+        $pendingPayments = $tempoPayments
+            ->where('status', PaymentStatus::Pending)
+            ->values();
+
+        $settledPayments = $tempoPayments
+            ->where('status', PaymentStatus::Success)
+            ->values();
+
+        $settledTotal = (int) $settledPayments->sum('amount');
+        $hasOverdue = $user->hasOverdueTempo();
+
+        return view('account.tempo', compact(
+            'user',
+            'tempoPayments',
+            'tempoLimit',
+            'usedTempo',
+            'remainingTempo',
+            'usagePercent',
+            'pendingPayments',
+            'settledPayments',
+            'settledTotal',
+            'hasOverdue'
+        ));
     }
 
     /**

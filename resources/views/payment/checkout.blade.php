@@ -71,13 +71,23 @@
                 </a>
             </div>
         </div>
-    @elseif ($latestPayment && $latestPayment->status === \App\Enums\PaymentStatus::Pending && $latestPayment->method === 'tempo_b2b')
+    @elseif (! empty($pendingTempoPayment))
+        @php
+            $tempoDueDate = $pendingTempoPayment->due_date ?? $pendingTempoPayment->created_at?->copy()->addDays(30);
+        @endphp
         <div class="p-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div>
-                <span class="font-bold block">Invoice Tempo Institusi / B2B Diterbitkan ({{ $latestPayment->ref }})</span>
-                <span>Pesanan diproses dengan skema TOP maksimal 30 hari. Poin loyalitas akan masuk setelah tagihan dilunasi.</span>
+            <div class="space-y-0.5">
+                <span class="font-extrabold block text-sm">Pelunasan Invoice Tempo Institusi / B2B ({{ $pendingTempoPayment->ref }})</span>
+                <span>
+                    Jatuh Tempo: <b>{{ $tempoDueDate?->format('d M Y') ?? '30 Hari' }}</b>. Pilih metode pembayaran Midtrans (QRIS, Virtual Account, atau E-Wallet) di bawah untuk melunasi tagihan dan memulihkan limit Tempo Anda secara otomatis.
+                </span>
             </div>
-            <span class="px-3 py-1.5 bg-blue-100 text-blue-800 font-bold rounded-xl">Menunggu Pelunasan</span>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('account.tempo') }}" class="px-3 py-1.5 bg-white hover:bg-blue-100 text-blue-800 border border-blue-200 font-bold rounded-xl transition">
+                    Semua Tagihan Tempo
+                </a>
+                <span class="px-3 py-1.5 bg-blue-100 text-blue-800 font-bold rounded-xl">Menunggu Pelunasan</span>
+            </div>
         </div>
     @elseif ($latestPayment && $latestPayment->status === \App\Enums\PaymentStatus::Pending)
         <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -234,40 +244,56 @@
                 </div>
 
                 {{-- D. Tempo Institusi / B2B (Disetujui Admin) --}}
-                @php
-                    $tempoAllowed = $user->canUseTempo((int) $order->total);
-                @endphp
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Fasilitas Tempo Institusi &amp; B2B</span>
-                        @if ($tempoAllowed)
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                                Limit Tersisa: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
-                            </span>
-                        @elseif ($user->isCivitas() || $user->isVerifiedMitra())
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Perlu Persetujuan Tempo Admin</span>
-                        @else
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Khusus Akun Terverifikasi</span>
-                        @endif
+                @if (! empty($pendingTempoPayment))
+                    <div class="p-3.5 rounded-2xl border border-blue-200 bg-blue-50/50 text-xs text-blue-900 space-y-1">
+                        <div class="font-bold flex items-center justify-between">
+                            <span>Mode Pelunasan Tagihan Tempo ({{ $pendingTempoPayment->ref }})</span>
+                            <span class="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-bold">Auto-Lunas Midtrans</span>
+                        </div>
+                        <p class="text-[11px] text-blue-800/90">
+                            Pesanan ini telah menggunakan fasilitas Tempo B2B. Pilih metode <b>QRIS, Virtual Account Bank, atau E-Wallet</b> di atas lalu tekan tombol bayar di kanan untuk melunasi tagihan via Midtrans.
+                        </p>
                     </div>
+                @else
+                    @php
+                        $tempoAllowed = $user->canUseTempo((int) $order->total);
+                    @endphp
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Fasilitas Tempo Institusi &amp; B2B</span>
+                            @if ($tempoAllowed)
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                    Limit Tersisa: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
+                                </span>
+                            @elseif ($user->hasOverdueTempo())
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800">Ada Tagihan Jatuh Tempo</span>
+                            @elseif ($user->isCivitas() || $user->isVerifiedMitra())
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Perlu Persetujuan Tempo Admin</span>
+                            @else
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Khusus Akun Terverifikasi</span>
+                            @endif
+                        </div>
 
-                    <label class="flex items-center justify-between p-3.5 rounded-2xl border {{ $tempoAllowed ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer hover:border-emerald-600' : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }} transition">
-                        <div class="flex items-center gap-3">
-                            <input type="radio" name="method" value="tempo_b2b" onchange="selectGatewayMethod('tempo_b2b')" {{ $tempoAllowed ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
-                            <div>
-                                <div class="text-xs font-bold text-gray-900">Invoice Tempo Institusi / B2B (TOP 30 Hari)</div>
-                                <div class="text-[11px] text-gray-500">
-                                    @if ($tempoAllowed)
-                                        Pembayaran kolektif SPK fakultas / mitra B2B dengan batas waktu maksimal 30 hari.
-                                    @else
-                                        Status civitas/mitra tidak otomatis memberi kredit; butuh persetujuan &amp; limit admin.
-                                    @endif
+                        <label class="flex items-center justify-between p-3.5 rounded-2xl border {{ $tempoAllowed ? 'border-emerald-300 bg-emerald-50/30 cursor-pointer hover:border-emerald-600' : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' }} transition">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="method" value="tempo_b2b" onchange="selectGatewayMethod('tempo_b2b')" {{ $tempoAllowed ? '' : 'disabled' }} class="w-4 h-4 text-[#0D5A47]">
+                                <div>
+                                    <div class="text-xs font-bold text-gray-900">Invoice Tempo Institusi / B2B (TOP 30 Hari)</div>
+                                    <div class="text-[11px] text-gray-500">
+                                        @if ($tempoAllowed)
+                                            Pembayaran kolektif SPK fakultas / mitra B2B dengan batas waktu maksimal 30 hari.
+                                        @elseif ($user->hasOverdueTempo())
+                                            Lunasi tagihan Tempo yang melewati jatuh tempo untuk menggunakan Tempo kembali.
+                                        @else
+                                            Status civitas/mitra tidak otomatis memberi kredit; butuh persetujuan &amp; limit admin.
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800">TOP 30H</span>
-                    </label>
-                </div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800">TOP 30H</span>
+                        </label>
+                    </div>
+                @endif
             </div>
 
             {{-- INFO TERMINAL MIDTRANS SNAP --}}
@@ -484,7 +510,7 @@
                 </div>
 
                 <button type="submit" class="btn" style="padding: 14px; font-size: 0.95rem;">
-                    Konfirmasi & Bayar Sekarang
+                    {{ ! empty($pendingTempoPayment) ? 'Lunasi Tagihan Tempo Sekarang' : 'Konfirmasi & Bayar Sekarang' }}
                 </button>
             </div>
         </div>

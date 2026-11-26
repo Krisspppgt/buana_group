@@ -269,25 +269,104 @@
                         </a>
                     @endif
 
-                    <div class="flex items-center bg-black/15 border border-white/10 rounded-xl p-1 pl-2.5 gap-2">
-                        <a href="{{ route('account.index') }}" class="flex items-center gap-2 hover:opacity-90 transition" title="Profil Akun & Buku Alamat">
-                            <span class="w-7 h-7 rounded-lg bg-white text-[#0D5A47] flex items-center justify-center font-bold text-xs">
+                    @php
+                        $pendingTempoBills = $user->pendingTempoCount();
+                    @endphp
+                    <div class="relative group" id="desktop-account-dropdown-wrapper">
+                        <button type="button"
+                            onclick="toggleDesktopAccountDropdown(event)"
+                            class="flex items-center bg-black/15 hover:bg-black/25 border border-white/10 rounded-xl p-1 pl-2.5 pr-2.5 gap-2 transition cursor-pointer focus:outline-none">
+                            <span class="relative w-7 h-7 rounded-lg bg-white text-[#0D5A47] flex items-center justify-center font-bold text-xs shrink-0">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
+                                @if ($pendingTempoBills > 0)
+                                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-[#0D5A47]"></span>
+                                @endif
                             </span>
-                            <div class="text-left pr-1">
+                            <div class="text-left">
                                 <span class="font-bold text-white text-xs block leading-none max-w-28 truncate">{{ $user->name }}</span>
                                 <span class="text-[10px] text-emerald-200/80 font-medium block leading-none mt-1">{{ $user->role_badge }}</span>
                             </div>
-                        </a>
+                            <svg class="w-3.5 h-3.5 text-emerald-200 opacity-80 group-hover:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
 
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="p-1.5 rounded-lg bg-white/10 hover:bg-red-500 text-emerald-100 hover:text-white transition cursor-pointer" title="Keluar (Logout)">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                            </button>
-                        </form>
+                        {{-- Dropdown Profil & Fasilitas Tempo --}}
+                        <div id="desktop-account-dropdown-menu" class="absolute top-full right-0 pt-2.5 w-76 hidden group-hover:block z-50">
+                            <div class="bg-white border border-slate-200 rounded-2xl shadow-xl p-3 text-slate-800 ring-1 ring-black/5 space-y-2">
+                                <div class="flex items-center gap-3 pb-2.5 border-b border-slate-100">
+                                    <span class="w-10 h-10 rounded-xl bg-[#0D5A47] text-white flex items-center justify-center font-extrabold text-sm shrink-0">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-xs font-extrabold text-slate-900 truncate">{{ $user->name }}</div>
+                                        <div class="text-[11px] font-semibold text-emerald-700 truncate">{{ $user->role_badge }}</div>
+                                        @if ($user->company_name || $user->faculty)
+                                            <div class="text-[10px] text-slate-400 truncate">{{ $user->company_name ?: $user->faculty }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1">
+                                    {{-- 1. Profil & Buku Alamat --}}
+                                    <a href="{{ route('account.index') }}" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition group/item {{ $currentRoute === 'account.index' ? 'bg-emerald-50/70' : '' }}">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 text-[#0D5A47] flex items-center justify-center shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold text-slate-900 group-hover/item:text-[#0D5A47]">Profil &amp; Buku Alamat</div>
+                                            <div class="text-[10px] text-slate-500 truncate">Pengaturan akun &amp; alamat kirim</div>
+                                        </div>
+                                        <svg class="w-4 h-4 text-slate-300 group-hover/item:text-[#0D5A47]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                    </a>
+
+                                    {{-- 2. Fasilitas & Tagihan Tempo B2B --}}
+                                    <a href="{{ route('account.tempo') }}" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50/60 transition group/item {{ $currentRoute === 'account.tempo' ? 'bg-blue-50/80 border border-blue-200/70' : '' }}">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center justify-between gap-1">
+                                                <span class="text-xs font-bold text-slate-900 group-hover/item:text-blue-700">Tempo &amp; Limit B2B</span>
+                                                @if ($pendingTempoBills > 0)
+                                                    <span class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">{{ $pendingTempoBills }} Tagihan</span>
+                                                @endif
+                                            </div>
+                                            @if ($user->tempo_approved && $user->tempo_limit > 0)
+                                                <div class="text-[10px] font-semibold text-blue-700 truncate">
+                                                    Sisa Limit: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
+                                                </div>
+                                            @else
+                                                <div class="text-[10px] text-slate-500 truncate">Cek limit, pemakaian &amp; pelunasan</div>
+                                            @endif
+                                        </div>
+                                        <svg class="w-4 h-4 text-slate-300 group-hover/item:text-blue-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                    </a>
+
+                                    {{-- 3. Dompet Buana Loyalty Points --}}
+                                    <a href="{{ route('loyalty.index') }}" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-amber-50/60 transition group/item {{ $currentRoute === 'loyalty.index' ? 'bg-amber-50/70' : '' }}">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold text-slate-900 group-hover/item:text-amber-800">Dompet Loyalty Points</div>
+                                            <div class="text-[10px] text-amber-700 font-semibold truncate">Saldo: {{ number_format((int) ($user->loyalty_points ?? 0), 0, ',', '.') }} Poin</div>
+                                        </div>
+                                        <svg class="w-4 h-4 text-slate-300 group-hover/item:text-amber-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                    </a>
+                                </div>
+
+                                <div class="pt-2 border-t border-slate-100">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition cursor-pointer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <span>Keluar (Logout)</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 @else
                     <a href="{{ route('login') }}" class="px-4 py-2 bg-white text-[#0D5A47] font-bold text-xs rounded-xl hover:bg-emerald-50 transition">
@@ -302,6 +381,21 @@
         function toggleDesktopUnitDropdown(e) {
             e.stopPropagation();
             const menu = document.getElementById('desktop-unit-dropdown-menu');
+            const accountMenu = document.getElementById('desktop-account-dropdown-menu');
+            if (accountMenu) {
+                accountMenu.classList.remove('!block');
+            }
+            if (menu) {
+                menu.classList.toggle('!block');
+            }
+        }
+        function toggleDesktopAccountDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('desktop-account-dropdown-menu');
+            const unitMenu = document.getElementById('desktop-unit-dropdown-menu');
+            if (unitMenu) {
+                unitMenu.classList.remove('!block');
+            }
             if (menu) {
                 menu.classList.toggle('!block');
             }
@@ -311,6 +405,11 @@
             const menu = document.getElementById('desktop-unit-dropdown-menu');
             if (wrapper && menu && !wrapper.contains(e.target)) {
                 menu.classList.remove('!block');
+            }
+            const accWrapper = document.getElementById('desktop-account-dropdown-wrapper');
+            const accMenu = document.getElementById('desktop-account-dropdown-menu');
+            if (accWrapper && accMenu && !accWrapper.contains(e.target)) {
+                accMenu.classList.remove('!block');
             }
         });
     </script>
@@ -524,9 +623,9 @@
             </div>
         </div>
 
-        {{-- Mobile Account Popover (Profil, Loyalty, Admin & Logout) --}}
+        {{-- Mobile Account Popover (Profil, Tempo B2B, Loyalty, Admin & Logout) --}}
         @auth
-        <div id="mobile-account-menu" class="hidden absolute bottom-full right-3 mb-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3.5 text-left z-50">
+        <div id="mobile-account-menu" class="hidden absolute bottom-full right-3 mb-2 w-68 bg-white rounded-2xl shadow-2xl border border-slate-200 p-3.5 text-left z-50">
             <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                 <span class="w-9 h-9 rounded-xl bg-[#0D5A47] text-white flex items-center justify-center font-bold text-xs shrink-0">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
@@ -537,8 +636,21 @@
                 </div>
             </div>
             <a href="{{ route('account.index') }}" class="mt-2.5 w-full flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold transition">
-                <span>Profil & Buku Alamat</span>
+                <span>Profil &amp; Buku Alamat</span>
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            <a href="{{ route('account.tempo') }}" class="mt-2 w-full flex items-center justify-between py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-bold transition">
+                <div>
+                    <span class="block">Tempo &amp; Limit B2B</span>
+                    @if ($user->tempo_approved && $user->tempo_limit > 0)
+                        <span class="text-[10px] font-semibold text-blue-700 block">Sisa: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}</span>
+                    @endif
+                </div>
+                @if (($pendingTempoBills ?? $user->pendingTempoCount()) > 0)
+                    <span class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-[10px] font-extrabold">{{ $pendingTempoBills ?? $user->pendingTempoCount() }} Tagihan</span>
+                @else
+                    <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                @endif
             </a>
             <a href="{{ route('loyalty.index') }}" class="mt-2 w-full flex items-center justify-between py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200 text-xs font-bold transition">
                 <span>Buana Loyalty Points</span>

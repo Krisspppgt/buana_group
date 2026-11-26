@@ -33,7 +33,12 @@
         <a href="{{ route('payment.checkout', $order->code) }}" class="text-sm font-bold text-[#0D5A47] hover:underline">
             &larr; Kembali ke Detail Pembayaran
         </a>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+            @if ($isTempoPending)
+                <a href="{{ route('payment.checkout', $order->code) }}" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 text-xs font-bold rounded-xl shadow-sm transition">
+                    💳 Lunasi Tagihan Tempo via Midtrans
+                </a>
+            @endif
             <button type="button" onclick="window.print()" class="px-4 py-2.5 bg-[#0D5A47] hover:bg-[#084032] text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer">
                 🖨️ Cetak / Simpan PDF
             </button>

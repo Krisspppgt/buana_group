@@ -66,14 +66,19 @@
     @endif
 
     @if ($user->tempo_approved && $user->tempo_limit > 0)
-        <div class="p-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="p-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
             <div>
                 <span class="font-bold block">Fasilitas Tempo Institusi / B2B Aktif (TOP Maksimal 30 Hari)</span>
                 <span>Limit disetujui: <b>Rp {{ number_format($user->tempo_limit, 0, ',', '.') }}</b> &bull; Terpakai: Rp {{ number_format($user->usedTempoAmount(), 0, ',', '.') }}</span>
             </div>
-            <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-bold">
-                Sisa Limit: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
-            </span>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-bold">
+                    Sisa Limit: Rp {{ number_format($user->remainingTempoLimit(), 0, ',', '.') }}
+                </span>
+                <a href="{{ route('account.tempo') }}" class="px-3 py-1 rounded-full bg-[#0D5A47] hover:bg-[#094234] text-white font-bold transition">
+                    Rincian &amp; Lunasi Tempo &rarr;
+                </a>
+            </div>
         </div>
     @endif
 
